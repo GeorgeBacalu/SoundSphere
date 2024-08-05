@@ -1,4 +1,7 @@
-﻿using SoundSphere.Core.Services.Interfaces;
+﻿using AutoMapper;
+using SoundSphere.Core.Mappings;
+using SoundSphere.Core.Services.Interfaces;
+using SoundSphere.Database.Dtos.Common;
 using SoundSphere.Database.Entities;
 using SoundSphere.Database.Repositories.Interfaces;
 
@@ -7,21 +10,25 @@ namespace SoundSphere.Core.Services
     public class FeedbackService : IFeedbackService
     {
         private readonly IFeedbackRepository _feedbackRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IMapper _mapper;
 
-        public FeedbackService(IFeedbackRepository feedbackRepository) => _feedbackRepository = feedbackRepository;
+        public FeedbackService(IFeedbackRepository feedbackRepository, IUserRepository userRepository, IMapper mapper) =>
+            (_feedbackRepository, _userRepository, _mapper) = (feedbackRepository, userRepository, mapper);
 
-        public List<Feedback> GetAll() => _feedbackRepository.GetAll();
+        public List<FeedbackDto> GetAll() => _feedbackRepository.GetAll().ToDtos(_mapper);
 
-        public Feedback GetById(Guid id) => _feedbackRepository.GetById(id);
+        public FeedbackDto GetById(Guid id) => _feedbackRepository.GetById(id).ToDto(_mapper);
 
-        public Feedback Add(Feedback feedback)
+        public FeedbackDto Add(FeedbackDto feedbackDto)
         {
+            Feedback feedback = feedbackDto.ToEntity(_userRepository, _mapper);
             _feedbackRepository.LinkFeedbackToUser(feedback);
-            return _feedbackRepository.Add(feedback);
+            return _feedbackRepository.Add(feedback).ToDto(_mapper);
         }
 
-        public Feedback UpdateById(Feedback feedback, Guid id) => _feedbackRepository.UpdateById(feedback, id);
+        public FeedbackDto UpdateById(FeedbackDto feedbackDto, Guid id) => _feedbackRepository.UpdateById(feedbackDto.ToEntity(_userRepository, _mapper), id).ToDto(_mapper);
 
-        public Feedback DeleteById(Guid id) => _feedbackRepository.DeleteById(id);
+        public FeedbackDto DeleteById(Guid id) => _feedbackRepository.DeleteById(id).ToDto(_mapper);
     }
 }

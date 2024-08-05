@@ -1,4 +1,7 @@
-﻿using SoundSphere.Core.Services.Interfaces;
+﻿using AutoMapper;
+using SoundSphere.Core.Mappings;
+using SoundSphere.Core.Services.Interfaces;
+using SoundSphere.Database.Dtos.Common;
 using SoundSphere.Database.Entities;
 using SoundSphere.Database.Repositories.Interfaces;
 
@@ -7,22 +10,26 @@ namespace SoundSphere.Core.Services
     public class NotificationService : INotificationService
     {
         private readonly INotificationRepository _notificationRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IMapper _mapper;
 
-        public NotificationService(INotificationRepository notificationRepository) => _notificationRepository = notificationRepository;
+        public NotificationService(INotificationRepository notificationRepository, IUserRepository userRepository, IMapper mapper) =>
+            (_notificationRepository, _userRepository, _mapper) = (notificationRepository, userRepository, mapper);
 
-        public List<Notification> GetAll() => _notificationRepository.GetAll();
+        public List<NotificationDto> GetAll() => _notificationRepository.GetAll().ToDtos(_mapper);
 
-        public Notification GetById(Guid id) => _notificationRepository.GetById(id);
+        public NotificationDto GetById(Guid id) => _notificationRepository.GetById(id).ToDto(_mapper);
 
-        public Notification Add(Notification notification)
+        public NotificationDto Add(NotificationDto notificationDto)
         {
+            Notification notification = notificationDto.ToEntity(_userRepository, _mapper);
             _notificationRepository.LinkNotificationToSender(notification);
             _notificationRepository.LinkNotificationToReceiver(notification);
-            return _notificationRepository.Add(notification);
+            return _notificationRepository.Add(notification).ToDto(_mapper);
         }
 
-        public Notification UpdateById(Notification notification, Guid id) => _notificationRepository.UpdateById(notification, id);
+        public NotificationDto UpdateById(NotificationDto notificationDto, Guid id) => _notificationRepository.UpdateById(notificationDto.ToEntity(_userRepository, _mapper), id).ToDto(_mapper);
 
-        public Notification DeleteById(Guid id) => _notificationRepository.DeleteById(id);
+        public NotificationDto DeleteById(Guid id) => _notificationRepository.DeleteById(id).ToDto(_mapper);
     }
 }
