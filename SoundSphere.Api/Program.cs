@@ -1,4 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+using SoundSphere.Database.Context;
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions => sqlOptions.MigrationsAssembly("SoundSphere.Api")));
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
