@@ -5,6 +5,12 @@ VisualStudioVersion = 17.10.34916.146
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoundSphere.Api", "SoundSphere.Api\SoundSphere.Api.csproj", "{D0C88ACC-6DB9-4692-9BC3-68A9E7924F20}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoundSphere.Core", "SoundSphere.Core\SoundSphere.Core.csproj", "{F0F275D4-1AE3-447F-ABC4-1B67431F26F3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoundSphere.Database", "SoundSphere.Database\SoundSphere.Database.csproj", "{594071D7-E2A4-4000-ABC7-8130DB7CFB42}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoundSphere.Infrastructure", "SoundSphere.Infrastructure\SoundSphere.Infrastructure.csproj", "{F8B01B8B-CCEB-4FEE-AC18-6C5E3B2130EB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +21,18 @@ Global
 		{D0C88ACC-6DB9-4692-9BC3-68A9E7924F20}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0C88ACC-6DB9-4692-9BC3-68A9E7924F20}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0C88ACC-6DB9-4692-9BC3-68A9E7924F20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F0F275D4-1AE3-447F-ABC4-1B67431F26F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0F275D4-1AE3-447F-ABC4-1B67431F26F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0F275D4-1AE3-447F-ABC4-1B67431F26F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0F275D4-1AE3-447F-ABC4-1B67431F26F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{594071D7-E2A4-4000-ABC7-8130DB7CFB42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{594071D7-E2A4-4000-ABC7-8130DB7CFB42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{594071D7-E2A4-4000-ABC7-8130DB7CFB42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{594071D7-E2A4-4000-ABC7-8130DB7CFB42}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8B01B8B-CCEB-4FEE-AC18-6C5E3B2130EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8B01B8B-CCEB-4FEE-AC18-6C5E3B2130EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8B01B8B-CCEB-4FEE-AC18-6C5E3B2130EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8B01B8B-CCEB-4FEE-AC18-6C5E3B2130EB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
