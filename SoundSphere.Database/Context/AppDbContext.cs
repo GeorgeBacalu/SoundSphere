@@ -6,20 +6,22 @@ namespace SoundSphere.Database.Context
 {
     public class AppDbContext : DbContext
     {
+        public AppDbContext() { }
+
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-        public DbSet<User> Users { get; set; }
-        public DbSet<Feedback> Feedbacks { get; set; }
-        public DbSet<Notification> Notifications { get; set; }
-        public DbSet<Album> Albums { get; set; }
-        public DbSet<Artist> Artists { get; set; }
-        public DbSet<Song> Songs { get; set; }
-        public DbSet<Playlist> Playlists { get; set; }
-        public DbSet<AlbumPair> AlbumPairs { get; set; }
-        public DbSet<ArtistPair> ArtistPairs { get; set; }
-        public DbSet<SongPair> SongPairs { get; set; }
-        public DbSet<UserArtist> UsersArtists { get; set; }
-        public DbSet<UserSong> UsersSongs { get; set; }
+        public virtual DbSet<User> Users { get; set; }
+        public virtual DbSet<Feedback> Feedbacks { get; set; }
+        public virtual DbSet<Notification> Notifications { get; set; }
+        public virtual DbSet<Album> Albums { get; set; }
+        public virtual DbSet<Artist> Artists { get; set; }
+        public virtual DbSet<Song> Songs { get; set; }
+        public virtual DbSet<Playlist> Playlists { get; set; }
+        public virtual DbSet<AlbumPair> AlbumPairs { get; set; }
+        public virtual DbSet<ArtistPair> ArtistPairs { get; set; }
+        public virtual DbSet<SongPair> SongPairs { get; set; }
+        public virtual DbSet<UserArtist> UsersArtists { get; set; }
+        public virtual DbSet<UserSong> UsersSongs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
