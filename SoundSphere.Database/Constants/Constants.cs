@@ -21,5 +21,13 @@
         public static readonly Guid ValidUserId = Guid.Parse("0a9e546f-38b4-4dbf-a482-24a82169890e");
         public static readonly Guid ValidUserId2 = Guid.Parse("7eb88892-549b-4cae-90be-c52088354643");
         public static readonly Guid InvalidId = Guid.Empty;
+
+        public static readonly string ApiAlbum = "/api/Album";
+        public static readonly string ApiArtist = "/api/Artist";
+        public static readonly string ApiFeedback = "/api/Feedback";
+        public static readonly string ApiNotification = "/api/Notification";
+        public static readonly string ApiPlaylist = "/api/Playlist";
+        public static readonly string ApiSong = "/api/Song";
+        public static readonly string ApiUser = "/api/User";
     }
 }

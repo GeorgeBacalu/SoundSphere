@@ -20,7 +20,7 @@ namespace SoundSphere.Test.Mocks
             Phone = "+40700000000",
             Address = "user_address1",
             Birthday = new DateOnly(2000, 1, 1),
-            ImageUrl = "https://user-image1.jpg",
+            ImageUrl = "https://user_image1.jpg",
             Role = Role.Admin,
             CreatedAt = new DateTime(2024, 8, 1, 0, 0, 0),
             UpdatedAt = new DateTime(2024, 8, 1, 0, 0, 0),
@@ -36,7 +36,7 @@ namespace SoundSphere.Test.Mocks
             Phone = "+40700000001",
             Address = "user_address2",
             Birthday = new DateOnly(2000, 1, 2),
-            ImageUrl = "https://user-image2.jpg",
+            ImageUrl = "https://user_image2.jpg",
             Role = Role.Moderator,
             CreatedAt = new DateTime(2024, 8, 2, 0, 0, 0),
             UpdatedAt = new DateTime(2024, 8, 2, 0, 0, 0),
@@ -50,7 +50,7 @@ namespace SoundSphere.Test.Mocks
             Phone = "+40700000002",
             Address = "new_user_address",
             Birthday = new DateOnly(2000, 1, 3),
-            ImageUrl = "https://new-user-image.jpg",
+            ImageUrl = "https://new_user_image.jpg",
             Role = Role.Listener
         };
 
