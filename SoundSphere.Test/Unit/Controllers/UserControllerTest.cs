@@ -1,10 +1,8 @@
-﻿using AutoMapper;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using SoundSphere.Api.Controllers;
-using SoundSphere.Core.Mappings;
 using SoundSphere.Core.Services.Interfaces;
 using SoundSphere.Database.Dtos.Common;
 using static SoundSphere.Database.Constants;
@@ -16,17 +14,12 @@ namespace SoundSphere.Test.Unit.Controllers
     {
         private readonly Mock<IUserService> _userServiceMock = new();
         private readonly UserController _userController;
-        private readonly IMapper _mapper;
         private readonly UserDto _userDto1 = GetUserDto1();
         private readonly UserDto _userDto2 = GetUserDto1();
         private readonly UserDto _newUserDto = GetNewUserDto();
         private readonly List<UserDto> _userDtos = GetUserDtos();
 
-        public UserControllerTest()
-        {
-            _mapper = new MapperConfiguration(config => config.AddProfile<AutoMapperProfile>()).CreateMapper();
-            _userController = new(_userServiceMock.Object);
-        }
+        public UserControllerTest() => _userController = new(_userServiceMock.Object);
 
         [Fact] public void GetAll_Test()
         {

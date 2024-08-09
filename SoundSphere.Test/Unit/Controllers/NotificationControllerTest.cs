@@ -1,10 +1,8 @@
-﻿using AutoMapper;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using SoundSphere.Api.Controllers;
-using SoundSphere.Core.Mappings;
 using SoundSphere.Core.Services.Interfaces;
 using SoundSphere.Database.Dtos.Common;
 using static SoundSphere.Database.Constants;
@@ -16,17 +14,12 @@ namespace SoundSphere.Test.Unit.Controllers
     {
         private readonly Mock<INotificationService> _notificationServiceMock = new();
         private readonly NotificationController _notificationController;
-        private readonly IMapper _mapper;
         private readonly NotificationDto _notificationDto1 = GetNotificationDto1();
         private readonly NotificationDto _notificationDto2 = GetNotificationDto1();
         private readonly NotificationDto _newNotificationDto = GetNewNotificationDto();
         private readonly List<NotificationDto> _notificationDtos = GetNotificationDtos();
 
-        public NotificationControllerTest()
-        {
-            _mapper = new MapperConfiguration(config => config.AddProfile<AutoMapperProfile>()).CreateMapper();
-            _notificationController = new(_notificationServiceMock.Object);
-        }
+        public NotificationControllerTest() => _notificationController = new(_notificationServiceMock.Object);
 
         [Fact] public void GetAll_Test()
         {
