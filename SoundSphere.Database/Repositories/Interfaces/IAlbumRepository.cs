@@ -1,10 +1,11 @@
-﻿using SoundSphere.Database.Entities;
+﻿using SoundSphere.Database.Dtos.Request.Pagination;
+using SoundSphere.Database.Entities;
 
 namespace SoundSphere.Database.Repositories.Interfaces
 {
     public interface IAlbumRepository
     {
-        List<Album> GetAll();
+        List<Album> GetAll(AlbumPaginationRequest payload);
 
         Album GetById(Guid id);
 

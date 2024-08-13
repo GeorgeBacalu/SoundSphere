@@ -2,6 +2,7 @@
 using SoundSphere.Core.Mappings;
 using SoundSphere.Core.Services.Interfaces;
 using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Request.Pagination;
 using SoundSphere.Database.Entities;
 using SoundSphere.Database.Repositories.Interfaces;
 
@@ -17,7 +18,7 @@ namespace SoundSphere.Core.Services
         public SongService(ISongRepository songRepository, IAlbumRepository albumRepository, IArtistRepository artistRepository, IMapper mapper) =>
             (_songRepository, _albumRepository, _artistRepository, _mapper) = (songRepository, albumRepository, artistRepository, mapper);
 
-        public List<SongDto> GetAll() => _songRepository.GetAll().ToDtos(_mapper);
+        public List<SongDto> GetAll(SongPaginationRequest payload) => _songRepository.GetAll(payload).ToDtos(_mapper);
 
         public SongDto GetById(Guid id) => _songRepository.GetById(id).ToDto(_mapper);
 

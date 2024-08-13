@@ -1,10 +1,11 @@
-﻿using SoundSphere.Database.Entities;
+﻿using SoundSphere.Database.Dtos.Request.Pagination;
+using SoundSphere.Database.Entities;
 
 namespace SoundSphere.Database.Repositories.Interfaces
 {
     public interface INotificationRepository
     {
-        List<Notification> GetAll();
+        List<Notification> GetAll(NotificationPaginationRequest payload);
 
         Notification GetById(Guid id);
 

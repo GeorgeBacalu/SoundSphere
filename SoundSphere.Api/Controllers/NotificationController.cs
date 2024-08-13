@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SoundSphere.Core.Services.Interfaces;
 using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Request.Pagination;
 using System.Net.Mime;
 
 namespace SoundSphere.Api.Controllers
@@ -15,9 +16,10 @@ namespace SoundSphere.Api.Controllers
 
         public NotificationController(INotificationService notificationService) => _notificationService = notificationService;
 
-        /// <summary>Get all notifications</summary>
+        /// <summary>Get all notifications with pagination rules</summary>
+        /// <param name="payload">Request body with notifications pagination rules</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [HttpGet] public IActionResult GetAll() => Ok(_notificationService.GetAll());
+        [HttpPost("get")] public IActionResult GetAll(NotificationPaginationRequest payload) => Ok(_notificationService.GetAll(payload));
 
         /// <summary>Get notification by ID</summary>
         /// <param name="id">Notification fetching ID</param>

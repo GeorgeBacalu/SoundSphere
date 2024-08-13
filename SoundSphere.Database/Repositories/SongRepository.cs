@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SoundSphere.Database.Context;
+using SoundSphere.Database.Dtos.Request.Pagination;
 using SoundSphere.Database.Entities;
+using SoundSphere.Database.Extensions;
 using SoundSphere.Database.Repositories.Interfaces;
 using SoundSphere.Infrastructure.Exceptions;
 using static SoundSphere.Database.Constants;
@@ -13,12 +15,12 @@ namespace SoundSphere.Database.Repositories
 
         public SongRepository(AppDbContext context) => _context = context;
 
-        public List<Song> GetAll() => _context.Songs
+        public List<Song> GetAll(SongPaginationRequest payload) => _context.Songs
             .Include(song => song.Album)
             .Include(song => song.Artists)
             .Include(song => song.SimilarSongs)
             .Where(song => song.DeletedAt == null)
-            .OrderBy(song => song.CreatedAt)
+            .ApplyPagination(payload)
             .ToList();
 
         public Song GetById(Guid id) => _context.Songs

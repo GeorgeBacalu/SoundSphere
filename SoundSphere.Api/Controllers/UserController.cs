@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SoundSphere.Core.Services.Interfaces;
 using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Request.Pagination;
 using System.Net.Mime;
 
 namespace SoundSphere.Api.Controllers
@@ -15,9 +16,10 @@ namespace SoundSphere.Api.Controllers
 
         public UserController(IUserService userService) => _userService = userService;
 
-        /// <summary>Get all users</summary>
+        /// <summary>Get all users with pagination rules</summary>
+        /// <param name="payload">Request body with users pagination rules</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [HttpGet] public IActionResult GetAll() => Ok(_userService.GetAll());
+        [HttpPost("get")] public IActionResult GetAll(UserPaginationRequest payload) => Ok(_userService.GetAll(payload));
 
         /// <summary>Get user by ID</summary>
         /// <param name="id">User fetching ID</param>

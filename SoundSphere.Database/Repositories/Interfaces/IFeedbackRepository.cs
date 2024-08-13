@@ -1,10 +1,11 @@
-﻿using SoundSphere.Database.Entities;
+﻿using SoundSphere.Database.Dtos.Request.Pagination;
+using SoundSphere.Database.Entities;
 
 namespace SoundSphere.Database.Repositories.Interfaces
 {
     public interface IFeedbackRepository
     {
-        List<Feedback> GetAll();
+        List<Feedback> GetAll(FeedbackPaginationRequest payload);
 
         Feedback GetById(Guid id);
 

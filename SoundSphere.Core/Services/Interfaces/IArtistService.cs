@@ -1,10 +1,11 @@
 ﻿using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Request.Pagination;
 
 namespace SoundSphere.Core.Services.Interfaces
 {
     public interface IArtistService
     {
-        List<ArtistDto> GetAll();
+        List<ArtistDto> GetAll(ArtistPaginationRequest payload);
 
         ArtistDto GetById(Guid id);
 

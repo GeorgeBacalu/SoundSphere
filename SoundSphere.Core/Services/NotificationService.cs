@@ -2,6 +2,7 @@
 using SoundSphere.Core.Mappings;
 using SoundSphere.Core.Services.Interfaces;
 using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Request.Pagination;
 using SoundSphere.Database.Entities;
 using SoundSphere.Database.Repositories.Interfaces;
 
@@ -16,7 +17,7 @@ namespace SoundSphere.Core.Services
         public NotificationService(INotificationRepository notificationRepository, IUserRepository userRepository, IMapper mapper) =>
             (_notificationRepository, _userRepository, _mapper) = (notificationRepository, userRepository, mapper);
 
-        public List<NotificationDto> GetAll() => _notificationRepository.GetAll().ToDtos(_mapper);
+        public List<NotificationDto> GetAll(NotificationPaginationRequest payload) => _notificationRepository.GetAll(payload).ToDtos(_mapper);
 
         public NotificationDto GetById(Guid id) => _notificationRepository.GetById(id).ToDto(_mapper);
 

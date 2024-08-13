@@ -2,6 +2,7 @@
 using SoundSphere.Core.Mappings;
 using SoundSphere.Core.Services.Interfaces;
 using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Request.Pagination;
 using SoundSphere.Database.Entities;
 using SoundSphere.Database.Repositories.Interfaces;
 
@@ -16,7 +17,7 @@ namespace SoundSphere.Core.Services
         public FeedbackService(IFeedbackRepository feedbackRepository, IUserRepository userRepository, IMapper mapper) =>
             (_feedbackRepository, _userRepository, _mapper) = (feedbackRepository, userRepository, mapper);
 
-        public List<FeedbackDto> GetAll() => _feedbackRepository.GetAll().ToDtos(_mapper);
+        public List<FeedbackDto> GetAll(FeedbackPaginationRequest payload) => _feedbackRepository.GetAll(payload).ToDtos(_mapper);
 
         public FeedbackDto GetById(Guid id) => _feedbackRepository.GetById(id).ToDto(_mapper);
 

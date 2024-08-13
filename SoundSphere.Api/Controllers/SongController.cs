@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SoundSphere.Core.Services.Interfaces;
 using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Request.Pagination;
 using System.Net.Mime;
 
 namespace SoundSphere.Api.Controllers
@@ -15,9 +16,10 @@ namespace SoundSphere.Api.Controllers
 
         public SongController(ISongService songService) => _songService = songService;
 
-        /// <summary>Get all songs</summary>
+        /// <summary>Get all songs with pagination rules</summary>
+        /// <param name="payload">Request body with songs pagination rules</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [HttpGet] public IActionResult GetAll() => Ok(_songService.GetAll());
+        [HttpPost("get")] public IActionResult GetAll(SongPaginationRequest payload) => Ok(_songService.GetAll(payload));
 
         /// <summary>Get song by ID</summary>
         /// <param name="id">Song fetching ID</param>
