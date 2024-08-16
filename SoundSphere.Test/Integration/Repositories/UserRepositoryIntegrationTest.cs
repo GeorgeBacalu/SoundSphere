@@ -11,10 +11,6 @@ namespace SoundSphere.Test.Integration.Repositories
     public class UserRepositoryIntegrationTest : IClassFixture<DbFixture>
     {
         private readonly DbFixture _dbFixture;
-        private readonly User _user1 = GetUser1();
-        private readonly User _user2 = GetUser2();
-        private readonly User _newUser = GetNewUser();
-        private readonly List<User> _users = GetUsers();
 
         public UserRepositoryIntegrationTest(DbFixture dbFixture) => _dbFixture = dbFixture;
 
@@ -29,9 +25,9 @@ namespace SoundSphere.Test.Integration.Repositories
             transaction.Rollback();
         }
 
-        [Fact] public void GetAll_Test() => Execute((userRepository, context) => userRepository.GetAll().Should().BeEquivalentTo(_users));
+        [Fact] public void GetAll_Test() => Execute((userRepository, context) => userRepository.GetAll(_userPayload).Should().BeEquivalentTo(_usersPagination));
 
-        [Fact] public void GetById_ValidId_Test() => Execute((userRepository, context) => userRepository.GetById(ValidUserId).Should().BeEquivalentTo(_user1, options => options));
+        [Fact] public void GetById_ValidId_Test() => Execute((userRepository, context) => userRepository.GetById(ValidUserId).Should().BeEquivalentTo(_users[0], options => options));
 
         [Fact] public void GetById_InvalidId_Test() => Execute((userRepository, context) => userRepository
             .Invoking(repository => repository.GetById(InvalidId))
@@ -49,28 +45,28 @@ namespace SoundSphere.Test.Integration.Repositories
 
         [Fact] public void UpdateById_ValidId_Test() => Execute((userRepository, context) =>
         {
-            User updatedUser = _user1;
+            User updatedUser = _users[0];
             updatedUser.Name = _newUser.Name;
             updatedUser.Email = _newUser.Email;
             updatedUser.Phone = _newUser.Phone;
-            updatedUser.Address = _user2.Address;
-            updatedUser.Birthday = _user2.Birthday;
-            updatedUser.ImageUrl = _user2.ImageUrl;
-            updatedUser.Role = _user2.Role;
+            updatedUser.Address = _users[1].Address;
+            updatedUser.Birthday = _users[1].Birthday;
+            updatedUser.ImageUrl = _users[1].ImageUrl;
+            updatedUser.Role = _users[1].Role;
             User result = userRepository.UpdateById(updatedUser, ValidUserId);
             result.Should().BeEquivalentTo(updatedUser, options => options.Excluding(user => user.UpdatedAt));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
         [Fact] public void UpdateById_InvalidId_Test() => Execute((userRepository, context) => userRepository
-            .Invoking(repository => repository.UpdateById(_user2, InvalidId))
+            .Invoking(repository => repository.UpdateById(_users[1], InvalidId))
             .Should().Throw<ResourceNotFoundException>()
             .WithMessage(string.Format(UserNotFound, InvalidId)));
 
         [Fact] public void DeleteById_ValidId_Test() => Execute((userRepository, context) =>
         {
             User result = userRepository.DeleteById(ValidUserId);
-            result.Should().BeEquivalentTo(_user1, options => options.Excluding(user => user.DeletedAt));
+            result.Should().BeEquivalentTo(_users[0], options => options.Excluding(user => user.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 

@@ -12,11 +12,6 @@ namespace SoundSphere.Test.Integration.Repositories
     public class NotificationRepositoryIntegrationTest : IClassFixture<DbFixture>
     {
         private readonly DbFixture _dbFixture;
-        private readonly Notification _notification1 = GetNotification1();
-        private readonly Notification _notification2 = GetNotification2();
-        private readonly Notification _newNotification = GetNewNotification();
-        private readonly List<Notification> _notifications = GetNotifications();
-        private readonly List<User> _users = GetUsers();
 
         public NotificationRepositoryIntegrationTest(DbFixture dbFixture) => _dbFixture = dbFixture;
 
@@ -31,9 +26,9 @@ namespace SoundSphere.Test.Integration.Repositories
             transaction.Rollback();
         }
 
-        [Fact] public void GetAll_Test() => Execute((notificationRepository, context) => notificationRepository.GetAll().Should().BeEquivalentTo(_notifications));
+        [Fact] public void GetAll_Test() => Execute((notificationRepository, context) => notificationRepository.GetAll(_notificationPayload).Should().BeEquivalentTo(_notificationsPagination));
 
-        [Fact] public void GetById_ValidId_Test() => Execute((notificationRepository, context) => notificationRepository.GetById(ValidNotificationId).Should().BeEquivalentTo(_notification1));
+        [Fact] public void GetById_ValidId_Test() => Execute((notificationRepository, context) => notificationRepository.GetById(ValidNotificationId).Should().BeEquivalentTo(_notifications[0]));
 
         [Fact] public void GetById_InvalidId_Test() => Execute((notificationRepository, context) => notificationRepository
             .Invoking(repository => repository.GetById(InvalidId))
@@ -53,24 +48,24 @@ namespace SoundSphere.Test.Integration.Repositories
 
         [Fact] public void UpdateById_ValidId_Test() => Execute((notificationRepository, context) =>
         {
-            Notification updatedNotification = _notification1;
-            updatedNotification.Type = _notification2.Type;
-            updatedNotification.Message = _notification2.Message;
-            updatedNotification.IsRead = _notification2.IsRead;
-            Notification result = notificationRepository.UpdateById(_notification2, ValidNotificationId);
+            Notification updatedNotification = _notifications[0];
+            updatedNotification.Type = _notifications[1].Type;
+            updatedNotification.Message = _notifications[1].Message;
+            updatedNotification.IsRead = _notifications[1].IsRead;
+            Notification result = notificationRepository.UpdateById(_notifications[1], ValidNotificationId);
             result.Should().BeEquivalentTo(updatedNotification, options => options.Excluding(notification => notification.UpdatedAt));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
         [Fact] public void UpdateById_InvalidId_Test() => Execute((notificationRepository, context) => notificationRepository
-            .Invoking(repository => repository.UpdateById(_notification2, InvalidId))
+            .Invoking(repository => repository.UpdateById(_notifications[1], InvalidId))
             .Should().Throw<ResourceNotFoundException>()
             .WithMessage(string.Format(NotificationNotFound, InvalidId)));
 
         [Fact] public void DeleteById_ValidId_Test() => Execute((notificationRepository, context) =>
         {
             Notification result = notificationRepository.DeleteById(ValidNotificationId);
-            result.Should().BeEquivalentTo(_notification1, options => options.Excluding(notification => notification.DeletedAt));
+            result.Should().BeEquivalentTo(_notifications[0], options => options.Excluding(notification => notification.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 

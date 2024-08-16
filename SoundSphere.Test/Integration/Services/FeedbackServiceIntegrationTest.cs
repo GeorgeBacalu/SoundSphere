@@ -17,15 +17,6 @@ namespace SoundSphere.Test.Integration.Services
     {
         private readonly DbFixture _dbFixture;
         private readonly IMapper _mapper;
-        private readonly Feedback _feedback1 = GetFeedback1();
-        private readonly Feedback _feedback2 = GetFeedback2();
-        private readonly Feedback _newFeedback = GetNewFeedback();
-        private readonly List<Feedback> _feedbacks = GetFeedbacks();
-        private readonly FeedbackDto _feedbackDto1 = GetFeedbackDto1();
-        private readonly FeedbackDto _feedbackDto2 = GetFeedbackDto2();
-        private readonly FeedbackDto _newFeedbackDto = GetNewFeedbackDto();
-        private readonly List<FeedbackDto> _feedbackDtos = GetFeedbackDtos();
-        private readonly List<User> _users = GetUsers();
 
         public FeedbackServiceIntegrationTest(DbFixture dbFixture) => (_dbFixture, _mapper) = (dbFixture, new MapperConfiguration(config => config.AddProfile<AutoMapperProfile>()).CreateMapper());
 
@@ -40,9 +31,9 @@ namespace SoundSphere.Test.Integration.Services
             transaction.Rollback();
         }
 
-        [Fact] public void GetAll_Test() => Execute((feedbackService, context) => feedbackService.GetAll().Should().BeEquivalentTo(_feedbackDtos));
+        [Fact] public void GetAll_Test() => Execute((feedbackService, context) => feedbackService.GetAll(_feedbackPayload).Should().BeEquivalentTo(_feedbackDtosPagination));
 
-        [Fact] public void GetById_ValidId_Test() => Execute((feedbackService, context) => feedbackService.GetById(ValidFeedbackId).Should().BeEquivalentTo(_feedbackDto1));
+        [Fact] public void GetById_ValidId_Test() => Execute((feedbackService, context) => feedbackService.GetById(ValidFeedbackId).Should().BeEquivalentTo(_feedbackDtos[0]));
 
         [Fact] public void GetById_InvalidId_Test() => Execute((feedbackService, context) => feedbackService
             .Invoking(service => service.GetById(InvalidId))
@@ -60,24 +51,24 @@ namespace SoundSphere.Test.Integration.Services
 
         [Fact] public void UpdateById_ValidId_Test() => Execute((feedbackService, context) =>
         {
-            Feedback updatedFeedback = _feedback1;
-            updatedFeedback.Type = _feedback2.Type;
-            updatedFeedback.Message = _feedback2.Message;
+            Feedback updatedFeedback = _feedbacks[0];
+            updatedFeedback.Type = _feedbacks[1].Type;
+            updatedFeedback.Message = _feedbacks[1].Message;
             FeedbackDto updatedFeedbackDto = updatedFeedback.ToDto(_mapper);
-            FeedbackDto result = feedbackService.UpdateById(_feedbackDto2, ValidFeedbackId);
+            FeedbackDto result = feedbackService.UpdateById(_feedbackDtos[1], ValidFeedbackId);
             result.Should().BeEquivalentTo(updatedFeedbackDto, options => options.Excluding(feedback => feedback.UpdatedAt));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
         [Fact] public void UpdateById_InvalidId_Test() => Execute((feedbackService, context) => feedbackService
-            .Invoking(service => service.UpdateById(_feedbackDto2, InvalidId))
+            .Invoking(service => service.UpdateById(_feedbackDtos[1], InvalidId))
             .Should().Throw<ResourceNotFoundException>()
             .WithMessage(string.Format(FeedbackNotFound, InvalidId)));
 
         [Fact] public void DeleteById_ValidId_Test() => Execute((feedbackService, context) =>
         {
             FeedbackDto result = feedbackService.DeleteById(ValidFeedbackId);
-            result.Should().BeEquivalentTo(_feedbackDto1, options => options.Excluding(feedback => feedback.DeletedAt));
+            result.Should().BeEquivalentTo(_feedbackDtos[0], options => options.Excluding(feedback => feedback.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 

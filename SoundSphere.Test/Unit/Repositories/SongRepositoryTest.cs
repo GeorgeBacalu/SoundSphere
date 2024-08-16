@@ -16,10 +16,6 @@ namespace SoundSphere.Test.Unit.Repositories
         private readonly Mock<DbSet<Song>> _dbSetMock = new();
         private readonly Mock<AppDbContext> _dbContextMock = new();
         private readonly ISongRepository _songRepository;
-        private readonly Song _song1 = GetSong1();
-        private readonly Song _song2 = GetSong2();
-        private readonly Song _newSong = GetNewSong();
-        private readonly List<Song> _songs = GetSongs();
 
         public SongRepositoryTest()
         {
@@ -32,9 +28,9 @@ namespace SoundSphere.Test.Unit.Repositories
             _songRepository = new SongRepository(_dbContextMock.Object);
         }
 
-        [Fact] public void GetAll_Test() => _songRepository.GetAll().Should().BeEquivalentTo(_songs);
+        [Fact] public void GetAll_Test() => _songRepository.GetAll(_songPayload).Should().BeEquivalentTo(_songsPagination);
 
-        [Fact] public void GetById_ValidId_Test() => _songRepository.GetById(ValidSongId).Should().BeEquivalentTo(_song1);
+        [Fact] public void GetById_ValidId_Test() => _songRepository.GetById(ValidSongId).Should().BeEquivalentTo(_songs[0]);
 
         [Fact] public void GetById_InvalidId_Test() => _songRepository
             .Invoking(repository => repository.GetById(InvalidId))
@@ -56,30 +52,30 @@ namespace SoundSphere.Test.Unit.Repositories
             Mock<CustomEntityEntry<Song>> entryMock = new();
             entryMock.SetupProperty(mock => mock.State, EntityState.Modified);
             _dbContextMock.Setup(mock => mock.Entry(It.IsAny<Song>())).Returns(entryMock.Object);
-            Song updatedSong = _song1;
-            updatedSong.Title = _song2.Title;
-            updatedSong.ImageUrl = _song2.ImageUrl;
-            updatedSong.Genre = _song2.Genre;
-            updatedSong.ReleaseDate = _song2.ReleaseDate;
-            updatedSong.DurationSeconds = _song2.DurationSeconds;
-            updatedSong.Album = _song2.Album;
-            updatedSong.Artists = _song2.Artists;
-            updatedSong.SimilarSongs = _song2.SimilarSongs;
-            Song result = _songRepository.UpdateById(_song2, ValidSongId);
+            Song updatedSong = _songs[0];
+            updatedSong.Title = _songs[1].Title;
+            updatedSong.ImageUrl = _songs[1].ImageUrl;
+            updatedSong.Genre = _songs[1].Genre;
+            updatedSong.ReleaseDate = _songs[1].ReleaseDate;
+            updatedSong.DurationSeconds = _songs[1].DurationSeconds;
+            updatedSong.Album = _songs[1].Album;
+            updatedSong.Artists = _songs[1].Artists;
+            updatedSong.SimilarSongs = _songs[1].SimilarSongs;
+            Song result = _songRepository.UpdateById(_songs[1], ValidSongId);
             result.Should().BeEquivalentTo(updatedSong, options => options.Excluding(song => song.UpdatedAt));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
             _dbContextMock.Verify(mock => mock.SaveChanges());
         }
 
         [Fact] public void UpdateById_InvalidId_Test() => _songRepository
-            .Invoking(repository => repository.UpdateById(_song2, InvalidId))
+            .Invoking(repository => repository.UpdateById(_songs[1], InvalidId))
             .Should().Throw<ResourceNotFoundException>()
             .WithMessage(string.Format(SongNotFound, InvalidId));
 
         [Fact] public void DeleteById_ValidId_Test()
         {
             Song result = _songRepository.DeleteById(ValidSongId);
-            result.Should().BeEquivalentTo(_song1, options => options.Excluding(song => song.DeletedAt));
+            result.Should().BeEquivalentTo(_songs[0], options => options.Excluding(song => song.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
             _dbContextMock.Verify(mock => mock.SaveChanges());
         }

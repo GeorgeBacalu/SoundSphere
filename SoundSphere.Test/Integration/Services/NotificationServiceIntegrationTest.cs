@@ -17,15 +17,6 @@ namespace SoundSphere.Test.Integration.Services
     {
         private readonly DbFixture _dbFixture;
         private readonly IMapper _mapper;
-        private readonly Notification _notification1 = GetNotification1();
-        private readonly Notification _notification2 = GetNotification2();
-        private readonly Notification _newNotification = GetNewNotification();
-        private readonly List<Notification> _notifications = GetNotifications();
-        private readonly NotificationDto _notificationDto1 = GetNotificationDto1();
-        private readonly NotificationDto _notificationDto2 = GetNotificationDto2();
-        private readonly NotificationDto _newNotificationDto = GetNewNotificationDto();
-        private readonly List<NotificationDto> _notificationDtos = GetNotificationDtos();
-        private readonly List<User> _users = GetUsers();
 
         public NotificationServiceIntegrationTest(DbFixture dbFixture) => (_dbFixture, _mapper) = (dbFixture, new MapperConfiguration(config => config.AddProfile<AutoMapperProfile>()).CreateMapper());
 
@@ -40,9 +31,9 @@ namespace SoundSphere.Test.Integration.Services
             transaction.Rollback();
         }
 
-        [Fact] public void GetAll_Test() => Execute((notificationService, context) => notificationService.GetAll().Should().BeEquivalentTo(_notificationDtos));
+        [Fact] public void GetAll_Test() => Execute((notificationService, context) => notificationService.GetAll(_notificationPayload).Should().BeEquivalentTo(_notificationDtosPagination ));
 
-        [Fact] public void GetById_ValidId_Test() => Execute((notificationService, context) => notificationService.GetById(ValidNotificationId).Should().BeEquivalentTo(_notificationDto1));
+        [Fact] public void GetById_ValidId_Test() => Execute((notificationService, context) => notificationService.GetById(ValidNotificationId).Should().BeEquivalentTo(_notificationDtos[0]));
 
         [Fact] public void GetById_InvalidId_Test() => Execute((notificationService, context) => notificationService
             .Invoking(service => service.GetById(InvalidId))
@@ -60,25 +51,25 @@ namespace SoundSphere.Test.Integration.Services
 
         [Fact] public void UpdateById_ValidId_Test() => Execute((notificationService, context) =>
         {
-            Notification updatedNotification = _notification1;
-            updatedNotification.Type = _notification2.Type;
-            updatedNotification.Message = _notification2.Message;
-            updatedNotification.IsRead = _notification2.IsRead;
+            Notification updatedNotification = _notifications[0];
+            updatedNotification.Type = _notifications[1].Type;
+            updatedNotification.Message = _notifications[1].Message;
+            updatedNotification.IsRead = _notifications[1].IsRead;
             NotificationDto updatedNotificationDto = updatedNotification.ToDto(_mapper);
-            NotificationDto result = notificationService.UpdateById(_notificationDto2, ValidNotificationId);
+            NotificationDto result = notificationService.UpdateById(_notificationDtos[1], ValidNotificationId);
             result.Should().BeEquivalentTo(updatedNotificationDto, options => options.Excluding(notification => notification.UpdatedAt));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
         [Fact] public void UpdateById_InvalidId_Test() => Execute((notificationService, context) => notificationService
-            .Invoking(service => service.UpdateById(_notificationDto2, InvalidId))
+            .Invoking(service => service.UpdateById(_notificationDtos[1], InvalidId))
             .Should().Throw<ResourceNotFoundException>()
             .WithMessage(string.Format(NotificationNotFound, InvalidId)));
 
         [Fact] public void DeleteById_ValidId_Test() => Execute((notificationService, context) =>
         {
             NotificationDto result = notificationService.DeleteById(ValidNotificationId);
-            result.Should().BeEquivalentTo(_notificationDto1, options => options.Excluding(notification => notification.DeletedAt));
+            result.Should().BeEquivalentTo(_notificationDtos[0], options => options.Excluding(notification => notification.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 

@@ -14,29 +14,25 @@ namespace SoundSphere.Test.Unit.Controllers
     {
         private readonly Mock<ISongService> _songServiceMock = new();
         private readonly SongController _songController;
-        private readonly SongDto _songDto1 = GetSongDto1();
-        private readonly SongDto _songDto2 = GetSongDto1();
-        private readonly SongDto _newSongDto = GetNewSongDto();
-        private readonly List<SongDto> _songDtos = GetSongDtos();
 
         public SongControllerTest() => _songController = new(_songServiceMock.Object);
 
         [Fact] public void GetAll_Test()
         {
-            _songServiceMock.Setup(mock => mock.GetAll()).Returns(_songDtos);
-            OkObjectResult? result = _songController.GetAll() as OkObjectResult;
+            _songServiceMock.Setup(mock => mock.GetAll(_songPayload)).Returns(_songDtosPagination);
+            OkObjectResult? result = _songController.GetAll(_songPayload) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_songDtos);
+            result?.Value.Should().BeEquivalentTo(_songDtosPagination);
         }
 
         [Fact] public void GetById_Test()
         {
-            _songServiceMock.Setup(mock => mock.GetById(ValidSongId)).Returns(_songDto1);
+            _songServiceMock.Setup(mock => mock.GetById(ValidSongId)).Returns(_songDtos[0]);
             OkObjectResult? result = _songController.GetById(ValidSongId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_songDto1);
+            result?.Value.Should().BeEquivalentTo(_songDtos[0]);
         }
 
         [Fact] public void Add_Test()
@@ -50,17 +46,17 @@ namespace SoundSphere.Test.Unit.Controllers
 
         [Fact] public void UpdateById_Test()
         {
-            SongDto updatedSongDto = _songDto1;
-            updatedSongDto.Title = _songDto2.Title;
-            updatedSongDto.ImageUrl = _songDto2.ImageUrl;
-            updatedSongDto.Genre = _songDto2.Genre;
-            updatedSongDto.ReleaseDate = _songDto2.ReleaseDate;
-            updatedSongDto.DurationSeconds = _songDto2.DurationSeconds;
-            updatedSongDto.AlbumId = _songDto2.AlbumId;
-            updatedSongDto.ArtistsIds = _songDto2.ArtistsIds;
-            updatedSongDto.SimilarSongsIds = _songDto2.SimilarSongsIds;
+            SongDto updatedSongDto = _songDtos[0];
+            updatedSongDto.Title = _songDtos[1].Title;
+            updatedSongDto.ImageUrl = _songDtos[1].ImageUrl;
+            updatedSongDto.Genre = _songDtos[1].Genre;
+            updatedSongDto.ReleaseDate = _songDtos[1].ReleaseDate;
+            updatedSongDto.DurationSeconds = _songDtos[1].DurationSeconds;
+            updatedSongDto.AlbumId = _songDtos[1].AlbumId;
+            updatedSongDto.ArtistsIds = _songDtos[1].ArtistsIds;
+            updatedSongDto.SimilarSongsIds = _songDtos[1].SimilarSongsIds;
             _songServiceMock.Setup(mock => mock.UpdateById(It.IsAny<SongDto>(), ValidSongId)).Returns(updatedSongDto);
-            OkObjectResult? result = _songController.UpdateById(_songDto2, ValidSongId) as OkObjectResult;
+            OkObjectResult? result = _songController.UpdateById(_songDtos[1], ValidSongId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(updatedSongDto);
@@ -68,7 +64,7 @@ namespace SoundSphere.Test.Unit.Controllers
 
         [Fact] public void DeleteById_Test()
         {
-            SongDto deletedSongDto = _songDto1;
+            SongDto deletedSongDto = _songDtos[0];
             deletedSongDto.DeletedAt = DateTime.UtcNow;
             _songServiceMock.Setup(mock => mock.DeleteById(ValidSongId)).Returns(deletedSongDto);
             OkObjectResult? result = _songController.DeleteById(ValidSongId) as OkObjectResult;

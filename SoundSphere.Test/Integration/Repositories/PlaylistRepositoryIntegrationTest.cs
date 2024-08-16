@@ -12,11 +12,6 @@ namespace SoundSphere.Test.Integration.Repositories
     public class PlaylistRepositoryIntegrationTest : IClassFixture<DbFixture>
     {
         private readonly DbFixture _dbFixture;
-        private readonly Playlist _playlist1 = GetPlaylist1();
-        private readonly Playlist _playlist2 = GetPlaylist2();
-        private readonly Playlist _newPlaylist = GetNewPlaylist();
-        private readonly List<Playlist> _playlists = GetPlaylists();
-        private readonly List<User> _users = GetUsers();
 
         public PlaylistRepositoryIntegrationTest(DbFixture dbFixture) => _dbFixture = dbFixture;
 
@@ -31,9 +26,9 @@ namespace SoundSphere.Test.Integration.Repositories
             transaction.Rollback();
         }
 
-        [Fact] public void GetAll_Test() => Execute((playlistRepository, context) => playlistRepository.GetAll().Should().BeEquivalentTo(_playlists));
+        [Fact] public void GetAll_Test() => Execute((playlistRepository, context) => playlistRepository.GetAll(_playlistPayload).Should().BeEquivalentTo(_playlistsPagination));
 
-        [Fact] public void GetById_ValidId_Test() => Execute((playlistRepository, context) => playlistRepository.GetById(ValidPlaylistId).Should().BeEquivalentTo(_playlist1));
+        [Fact] public void GetById_ValidId_Test() => Execute((playlistRepository, context) => playlistRepository.GetById(ValidPlaylistId).Should().BeEquivalentTo(_playlists[0]));
 
         [Fact] public void GetById_InvalidId_Test() => Execute((playlistRepository, context) => playlistRepository
             .Invoking(repository => repository.GetById(InvalidId))
@@ -52,22 +47,22 @@ namespace SoundSphere.Test.Integration.Repositories
 
         [Fact] public void UpdateById_ValidId_Test() => Execute((playlistRepository, context) =>
         {
-            Playlist updatedPlaylist = _playlist1;
-            updatedPlaylist.Title = _playlist2.Title;
-            Playlist result = playlistRepository.UpdateById(_playlist2, ValidPlaylistId);
+            Playlist updatedPlaylist = _playlists[0];
+            updatedPlaylist.Title = _playlists[1].Title;
+            Playlist result = playlistRepository.UpdateById(_playlists[1], ValidPlaylistId);
             result.Should().BeEquivalentTo(updatedPlaylist, options => options.Excluding(playlist => playlist.UpdatedAt));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
         [Fact] public void UpdateById_InvalidId_Test() => Execute((playlistRepository, context) => playlistRepository
-            .Invoking(repository => repository.UpdateById(_playlist2, InvalidId))
+            .Invoking(repository => repository.UpdateById(_playlists[1], InvalidId))
             .Should().Throw<ResourceNotFoundException>()
             .WithMessage(string.Format(PlaylistNotFound, InvalidId)));
 
         [Fact] public void DeleteById_ValidId_Test() => Execute((playlistRepository, context) =>
         {
             Playlist result = playlistRepository.DeleteById(ValidPlaylistId);
-            result.Should().BeEquivalentTo(_playlist1, options => options.Excluding(playlist => playlist.DeletedAt));
+            result.Should().BeEquivalentTo(_playlists[0], options => options.Excluding(playlist => playlist.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 

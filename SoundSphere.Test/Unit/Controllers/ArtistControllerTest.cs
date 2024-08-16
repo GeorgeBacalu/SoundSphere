@@ -14,29 +14,25 @@ namespace SoundSphere.Test.Unit.Controllers
     {
         private readonly Mock<IArtistService> _artistServiceMock = new();
         private readonly ArtistController _artistController;
-        private readonly ArtistDto _artistDto1 = GetArtistDto1();
-        private readonly ArtistDto _artistDto2 = GetArtistDto1();
-        private readonly ArtistDto _newArtistDto = GetNewArtistDto();
-        private readonly List<ArtistDto> _artistDtos = GetArtistDtos();
 
         public ArtistControllerTest() => _artistController = new(_artistServiceMock.Object);
 
         [Fact] public void GetAll_Test()
         {
-            _artistServiceMock.Setup(mock => mock.GetAll()).Returns(_artistDtos);
-            OkObjectResult? result = _artistController.GetAll() as OkObjectResult;
+            _artistServiceMock.Setup(mock => mock.GetAll(_artistPayload)).Returns(_artistDtosPagination);
+            OkObjectResult? result = _artistController.GetAll(_artistPayload) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_artistDtos);
+            result?.Value.Should().BeEquivalentTo(_artistDtosPagination);
         }
 
         [Fact] public void GetById_Test()
         {
-            _artistServiceMock.Setup(mock => mock.GetById(ValidArtistId)).Returns(_artistDto1);
+            _artistServiceMock.Setup(mock => mock.GetById(ValidArtistId)).Returns(_artistDtos[0]);
             OkObjectResult? result = _artistController.GetById(ValidArtistId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_artistDto1);
+            result?.Value.Should().BeEquivalentTo(_artistDtos[0]);
         }
 
         [Fact] public void Add_Test()
@@ -50,13 +46,13 @@ namespace SoundSphere.Test.Unit.Controllers
 
         [Fact] public void UpdateById_Test()
         {
-            ArtistDto updatedArtistDto = _artistDto1;
-            updatedArtistDto.Name = _artistDto2.Name;
-            updatedArtistDto.ImageUrl = _artistDto2.ImageUrl;
-            updatedArtistDto.Bio = _artistDto2.Bio;
-            updatedArtistDto.SimilarArtistsIds = _artistDto2.SimilarArtistsIds;
+            ArtistDto updatedArtistDto = _artistDtos[0];
+            updatedArtistDto.Name = _artistDtos[1].Name;
+            updatedArtistDto.ImageUrl = _artistDtos[1].ImageUrl;
+            updatedArtistDto.Bio = _artistDtos[1].Bio;
+            updatedArtistDto.SimilarArtistsIds = _artistDtos[1].SimilarArtistsIds;
             _artistServiceMock.Setup(mock => mock.UpdateById(It.IsAny<ArtistDto>(), ValidArtistId)).Returns(updatedArtistDto);
-            OkObjectResult? result = _artistController.UpdateById(_artistDto2, ValidArtistId) as OkObjectResult;
+            OkObjectResult? result = _artistController.UpdateById(_artistDtos[1], ValidArtistId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(updatedArtistDto);
@@ -64,7 +60,7 @@ namespace SoundSphere.Test.Unit.Controllers
 
         [Fact] public void DeleteById_Test()
         {
-            ArtistDto deletedArtistDto = _artistDto1;
+            ArtistDto deletedArtistDto = _artistDtos[0];
             deletedArtistDto.DeletedAt = DateTime.UtcNow;
             _artistServiceMock.Setup(mock => mock.DeleteById(ValidArtistId)).Returns(deletedArtistDto);
             OkObjectResult? result = _artistController.DeleteById(ValidArtistId) as OkObjectResult;

@@ -12,11 +12,6 @@ namespace SoundSphere.Test.Integration.Repositories
     public class FeedbackRepositoryIntegrationTest : IClassFixture<DbFixture>
     {
         private readonly DbFixture _dbFixture;
-        private readonly Feedback _feedback1 = GetFeedback1();
-        private readonly Feedback _feedback2 = GetFeedback2();
-        private readonly Feedback _newFeedback = GetNewFeedback();
-        private readonly List<Feedback> _feedbacks = GetFeedbacks();
-        private readonly List<User> _users = GetUsers();
 
         public FeedbackRepositoryIntegrationTest(DbFixture dbFixture) => _dbFixture = dbFixture;
 
@@ -31,9 +26,9 @@ namespace SoundSphere.Test.Integration.Repositories
             transaction.Rollback();
         }
 
-        [Fact] public void GetAll_Test() => Execute((feedbackRepository, context) => feedbackRepository.GetAll().Should().BeEquivalentTo(_feedbacks));
+        [Fact] public void GetAll_Test() => Execute((feedbackRepository, context) => feedbackRepository.GetAll(_feedbackPayload).Should().BeEquivalentTo(_feedbacksPagination));
 
-        [Fact] public void GetById_ValidId_Test() => Execute((feedbackRepository, context) => feedbackRepository.GetById(ValidFeedbackId).Should().BeEquivalentTo(_feedback1));
+        [Fact] public void GetById_ValidId_Test() => Execute((feedbackRepository, context) => feedbackRepository.GetById(ValidFeedbackId).Should().BeEquivalentTo(_feedbacks[0]));
 
         [Fact] public void GetById_InvalidId_Test() => Execute((feedbackRepository, context) => feedbackRepository
             .Invoking(repository => repository.GetById(InvalidId))
@@ -52,23 +47,23 @@ namespace SoundSphere.Test.Integration.Repositories
 
         [Fact] public void UpdateById_ValidId_Test() => Execute((feedbackRepository, context) =>
         {
-            Feedback updatedFeedback = _feedback1;
-            updatedFeedback.Type = _feedback2.Type;
-            updatedFeedback.Message = _feedback2.Message;
-            Feedback result = feedbackRepository.UpdateById(_feedback2, ValidFeedbackId);
+            Feedback updatedFeedback = _feedbacks[0];
+            updatedFeedback.Type = _feedbacks[1].Type;
+            updatedFeedback.Message = _feedbacks[1].Message;
+            Feedback result = feedbackRepository.UpdateById(_feedbacks[1], ValidFeedbackId);
             result.Should().BeEquivalentTo(updatedFeedback, options => options.Excluding(feedback => feedback.UpdatedAt));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
         [Fact] public void UpdateById_InvalidId_Test() => Execute((feedbackRepository, context) => feedbackRepository
-            .Invoking(repository => repository.UpdateById(_feedback2, InvalidId))
+            .Invoking(repository => repository.UpdateById(_feedbacks[1], InvalidId))
             .Should().Throw<ResourceNotFoundException>()
             .WithMessage(string.Format(FeedbackNotFound, InvalidId)));
 
         [Fact] public void DeleteById_ValidId_Test() => Execute((feedbackRepository, context) =>
         {
             Feedback result = feedbackRepository.DeleteById(ValidFeedbackId);
-            result.Should().BeEquivalentTo(_feedback1, options => options.Excluding(feedback => feedback.DeletedAt));
+            result.Should().BeEquivalentTo(_feedbacks[0], options => options.Excluding(feedback => feedback.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 

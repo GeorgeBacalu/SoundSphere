@@ -16,10 +16,6 @@ namespace SoundSphere.Test.Unit.Repositories
         private readonly Mock<DbSet<Artist>> _dbSetMock = new();
         private readonly Mock<AppDbContext> _dbContextMock = new();
         private readonly IArtistRepository _artistRepository;
-        private readonly Artist _artist1 = GetArtist1();
-        private readonly Artist _artist2 = GetArtist2();
-        private readonly Artist _newArtist = GetNewArtist();
-        private readonly List<Artist> _artists = GetArtists();
 
         public ArtistRepositoryTest()
         {
@@ -32,9 +28,9 @@ namespace SoundSphere.Test.Unit.Repositories
             _artistRepository = new ArtistRepository(_dbContextMock.Object);
         }
 
-        [Fact] public void GetAll_Test() => _artistRepository.GetAll().Should().BeEquivalentTo(_artists);
+        [Fact] public void GetAll_Test() => _artistRepository.GetAll(_artistPayload).Should().BeEquivalentTo(_artistsPagination);
 
-        [Fact] public void GetById_ValidId_Test() => _artistRepository.GetById(ValidArtistId).Should().BeEquivalentTo(_artist1);
+        [Fact] public void GetById_ValidId_Test() => _artistRepository.GetById(ValidArtistId).Should().BeEquivalentTo(_artists[0]);
 
         [Fact] public void GetById_InvalidId_Test() => _artistRepository
             .Invoking(repository => repository.GetById(InvalidId))
@@ -56,26 +52,26 @@ namespace SoundSphere.Test.Unit.Repositories
             Mock<CustomEntityEntry<Artist>> entryMock = new();
             entryMock.SetupProperty(mock => mock.State, EntityState.Modified);
             _dbContextMock.Setup(mock => mock.Entry(It.IsAny<Artist>())).Returns(entryMock.Object);
-            Artist updatedArtist = _artist1;
-            updatedArtist.Name = _artist2.Name;
-            updatedArtist.ImageUrl = _artist2.ImageUrl;
-            updatedArtist.Bio = _artist2.Bio;
-            updatedArtist.SimilarArtists = _artist2.SimilarArtists;
-            Artist result = _artistRepository.UpdateById(_artist2, ValidArtistId);
+            Artist updatedArtist = _artists[0];
+            updatedArtist.Name = _artists[1].Name;
+            updatedArtist.ImageUrl = _artists[1].ImageUrl;
+            updatedArtist.Bio = _artists[1].Bio;
+            updatedArtist.SimilarArtists = _artists[1].SimilarArtists;
+            Artist result = _artistRepository.UpdateById(_artists[1], ValidArtistId);
             result.Should().BeEquivalentTo(updatedArtist, options => options.Excluding(artist => artist.UpdatedAt));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
             _dbContextMock.Verify(mock => mock.SaveChanges());
         }
 
         [Fact] public void UpdateById_InvalidId_Test() => _artistRepository
-            .Invoking(repository => repository.UpdateById(_artist2, InvalidId))
+            .Invoking(repository => repository.UpdateById(_artists[1], InvalidId))
             .Should().Throw<ResourceNotFoundException>()
             .WithMessage(string.Format(ArtistNotFound, InvalidId));
 
         [Fact] public void DeleteById_ValidId_Test()
         {
             Artist result = _artistRepository.DeleteById(ValidArtistId);
-            result.Should().BeEquivalentTo(_artist1, options => options.Excluding(artist => artist.DeletedAt));
+            result.Should().BeEquivalentTo(_artists[0], options => options.Excluding(artist => artist.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
             _dbContextMock.Verify(mock => mock.SaveChanges());
         }

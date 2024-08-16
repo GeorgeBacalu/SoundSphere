@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using SoundSphere.Database.Context;
 using SoundSphere.Database.Dtos.Common;
-using SoundSphere.Database.Entities;
 using System.Net.Mime;
 using System.Text;
 using static Newtonsoft.Json.JsonConvert;
@@ -22,14 +21,6 @@ namespace SoundSphere.Test.Integration.Controllers
         private readonly DbFixture _dbFixture;
         private readonly CustomWebAppFactory _factory;
         private readonly HttpClient _httpClient;
-        private readonly List<Playlist> _playlists = GetPlaylists();
-        private readonly PlaylistDto _playlistDto1 = GetPlaylistDto1();
-        private readonly PlaylistDto _playlistDto2 = GetPlaylistDto2();
-        private readonly PlaylistDto _newPlaylistDto = GetNewPlaylistDto();
-        private readonly List<PlaylistDto> _playlistDtos = GetPlaylistDtos();
-        private readonly List<Album> _albums = GetAlbums();
-        private readonly List<Song> _songs = GetSongs();
-        private readonly List<User> _users = GetUsers();
 
         public PlaylistControllerIntegrationTest() { _dbFixture = new DbFixture(); _factory = new(_dbFixture); _httpClient = _factory.CreateClient(); }
 
@@ -60,11 +51,11 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task GetAll_Test() => await Execute(async () =>
         {
-            var response = await _httpClient.GetAsync(ApiPlaylist);
+            var response = await _httpClient.PostAsync(ApiPlaylist, new StringContent(SerializeObject(_playlistPayload), Encoding.UTF8, MediaTypeNames.Application.Json));
             response.Should().NotBeNull();
             response.StatusCode.Should().Be(OK);
             var responseBody = DeserializeObject<List<PlaylistDto>>(await response.Content.ReadAsStringAsync());
-            responseBody.Should().BeEquivalentTo(_playlistDtos, options => options.Excluding(playlist => playlist.SongsIds));
+            responseBody.Should().BeEquivalentTo(_playlistDtosPagination, options => options.Excluding(playlist => playlist.SongsIds));
         });
 
         [Fact] public async Task GetById_ValidId_Test() => await Execute(async () =>
@@ -73,7 +64,7 @@ namespace SoundSphere.Test.Integration.Controllers
             response.Should().NotBeNull();
             response.StatusCode.Should().Be(OK);
             var responseBody = DeserializeObject<PlaylistDto>(await response.Content.ReadAsStringAsync());
-            responseBody.Should().BeEquivalentTo(_playlistDto1, options => options.Excluding(playlist => playlist.SongsIds));
+            responseBody.Should().BeEquivalentTo(_playlistDtos[0], options => options.Excluding(playlist => playlist.SongsIds));
         });
 
         [Fact] public async Task GetById_InvalidId_Test() => await Execute(async () =>
@@ -102,9 +93,9 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task UpdateById_ValidId_Test() => await Execute(async () =>
         {
-            PlaylistDto updatedPlaylistDto = _playlistDto1;
-            updatedPlaylistDto.Title = _playlistDto2.Title;
-            var updateResponse = await _httpClient.PutAsync($"{ApiPlaylist}/{ValidPlaylistId}", new StringContent(SerializeObject(_playlistDto2), Encoding.UTF8, MediaTypeNames.Application.Json));
+            PlaylistDto updatedPlaylistDto = _playlistDtos[0];
+            updatedPlaylistDto.Title = _playlistDtos[1].Title;
+            var updateResponse = await _httpClient.PutAsync($"{ApiPlaylist}/{ValidPlaylistId}", new StringContent(SerializeObject(_playlistDtos[1]), Encoding.UTF8, MediaTypeNames.Application.Json));
             updateResponse.Should().NotBeNull();
             updateResponse.StatusCode.Should().Be(OK);
             var updateResponseBody = DeserializeObject<PlaylistDto>(await updateResponse.Content.ReadAsStringAsync());
@@ -119,7 +110,7 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task UpdateById_InvalidId_Test() => await Execute(async () =>
         {
-            var response = await _httpClient.PutAsync($"{ApiPlaylist}/{InvalidId}", new StringContent(SerializeObject(_playlistDto2), Encoding.UTF8, MediaTypeNames.Application.Json));
+            var response = await _httpClient.PutAsync($"{ApiPlaylist}/{InvalidId}", new StringContent(SerializeObject(_playlistDtos[1]), Encoding.UTF8, MediaTypeNames.Application.Json));
             response.Should().NotBeNull();
             response.StatusCode.Should().Be(NotFound);
             var responseBody = DeserializeObject<ProblemDetails>(await response.Content.ReadAsStringAsync());
@@ -128,7 +119,7 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task DeleteById_ValidId_Test() => await Execute(async () =>
         {
-            PlaylistDto deletedPlaylistDto = _playlistDto1;
+            PlaylistDto deletedPlaylistDto = _playlistDtos[0];
             deletedPlaylistDto.DeletedAt = DateTime.UtcNow;
             var deleteResponse = await _httpClient.DeleteAsync($"{ApiPlaylist}/{ValidPlaylistId}");
             deleteResponse.Should().NotBeNull();

@@ -18,14 +18,6 @@ namespace SoundSphere.Test.Unit.Services
         private readonly Mock<IAlbumRepository> _albumRepositoryMock = new();
         private readonly IAlbumService _albumService;
         private readonly IMapper _mapper;
-        private readonly Album _album1 = GetAlbum1();
-        private readonly Album _album2 = GetAlbum2();
-        private readonly Album _newAlbum = GetNewAlbum();
-        private readonly List<Album> _albums = GetAlbums();
-        private readonly AlbumDto _albumDto1 = GetAlbumDto1();
-        private readonly AlbumDto _albumDto2 = GetAlbumDto2();
-        private readonly AlbumDto _newAlbumDto = GetNewAlbumDto();
-        private readonly List<AlbumDto> _albumDtos = GetAlbumDtos();
 
         public AlbumServiceTest()
         {
@@ -35,14 +27,14 @@ namespace SoundSphere.Test.Unit.Services
 
         [Fact] public void GetAll_Test()
         {
-            _albumRepositoryMock.Setup(mock => mock.GetAll()).Returns(_albums);
-            _albumService.GetAll().Should().BeEquivalentTo(_albumDtos);
+            _albumRepositoryMock.Setup(mock => mock.GetAll(_albumPayload)).Returns(_albumsPagination);
+            _albumService.GetAll(_albumPayload).Should().BeEquivalentTo(_albumDtosPagination);
         }
 
         [Fact] public void GetById_ValidId_Test()
         {
-            _albumRepositoryMock.Setup(mock => mock.GetById(ValidAlbumId)).Returns(_album1);
-            _albumService.GetById(ValidAlbumId).Should().BeEquivalentTo(_albumDto1);
+            _albumRepositoryMock.Setup(mock => mock.GetById(ValidAlbumId)).Returns(_albums[0]);
+            _albumService.GetById(ValidAlbumId).Should().BeEquivalentTo(_albumDtos[0]);
         }
 
         [Fact] public void GetById_InvalidId_Test()
@@ -63,21 +55,21 @@ namespace SoundSphere.Test.Unit.Services
 
         [Fact] public void UpdateById_ValidId_Test()
         {
-            Album updatedAlbum = _album1;
-            updatedAlbum.Title = _album2.Title;
-            updatedAlbum.ImageUrl = _album2.ImageUrl;
-            updatedAlbum.ReleaseDate = _album2.ReleaseDate;
-            updatedAlbum.SimilarAlbums = _album2.SimilarAlbums;
+            Album updatedAlbum = _albums[0];
+            updatedAlbum.Title = _albums[1].Title;
+            updatedAlbum.ImageUrl = _albums[1].ImageUrl;
+            updatedAlbum.ReleaseDate = _albums[1].ReleaseDate;
+            updatedAlbum.SimilarAlbums = _albums[1].SimilarAlbums;
             AlbumDto updatedAlbumDto = updatedAlbum.ToDto(_mapper);
             _albumRepositoryMock.Setup(mock => mock.UpdateById(It.IsAny<Album>(), ValidAlbumId)).Returns(updatedAlbum);
-            _albumService.UpdateById(_albumDto2, ValidAlbumId).Should().BeEquivalentTo(updatedAlbumDto);
+            _albumService.UpdateById(_albumDtos[1], ValidAlbumId).Should().BeEquivalentTo(updatedAlbumDto);
             _albumRepositoryMock.Verify(mock => mock.UpdateById(It.IsAny<Album>(), ValidAlbumId));
         }
 
         [Fact] public void UpdateById_InvalidId_Test()
         {
             _albumRepositoryMock.Setup(mock => mock.UpdateById(It.IsAny<Album>(), InvalidId)).Throws(new ResourceNotFoundException(string.Format(AlbumNotFound, InvalidId)));
-            _albumService.Invoking(service => service.UpdateById(_albumDto2, InvalidId))
+            _albumService.Invoking(service => service.UpdateById(_albumDtos[1], InvalidId))
                 .Should().Throw<ResourceNotFoundException>()
                 .WithMessage(string.Format(AlbumNotFound, InvalidId));
             _albumRepositoryMock.Verify(mock => mock.UpdateById(It.IsAny<Album>(), InvalidId));
@@ -85,7 +77,7 @@ namespace SoundSphere.Test.Unit.Services
 
         [Fact] public void DeleteById_ValidId_Test()
         {
-            Album deletedAlbum = _album1;
+            Album deletedAlbum = _albums[0];
             deletedAlbum.DeletedAt = DateTime.UtcNow;
             AlbumDto deletedAlbumDto = deletedAlbum.ToDto(_mapper);
             _albumRepositoryMock.Setup(mock => mock.DeleteById(ValidAlbumId)).Returns(deletedAlbum);

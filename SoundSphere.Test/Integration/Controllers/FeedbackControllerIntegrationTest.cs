@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using SoundSphere.Database.Context;
 using SoundSphere.Database.Dtos.Common;
-using SoundSphere.Database.Entities;
 using System.Net.Mime;
 using System.Text;
 using static Newtonsoft.Json.JsonConvert;
@@ -20,12 +19,6 @@ namespace SoundSphere.Test.Integration.Controllers
         private readonly DbFixture _dbFixture;
         private readonly CustomWebAppFactory _factory;
         private readonly HttpClient _httpClient;
-        private readonly List<Feedback> _feedbacks = GetFeedbacks();
-        private readonly FeedbackDto _feedbackDto1 = GetFeedbackDto1();
-        private readonly FeedbackDto _feedbackDto2 = GetFeedbackDto2();
-        private readonly FeedbackDto _newFeedbackDto = GetNewFeedbackDto();
-        private readonly List<FeedbackDto> _feedbackDtos = GetFeedbackDtos();
-        private readonly List<User> _users = GetUsers();
 
         public FeedbackControllerIntegrationTest() { _dbFixture = new DbFixture(); _factory = new(_dbFixture); _httpClient = _factory.CreateClient(); }
 
@@ -49,20 +42,20 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task GetAll_Test() => await Execute(async () =>
         {
-            var response = await _httpClient.GetAsync(ApiFeedback);
+            var response = await _httpClient.PostAsync(ApiFeedback, new StringContent(SerializeObject(_feedbackPayload), Encoding.UTF8, MediaTypeNames.Application.Json));
             response.Should().NotBeNull();
             response.StatusCode.Should().Be(OK);
             var responseBody = DeserializeObject<List<FeedbackDto>>(await response.Content.ReadAsStringAsync());
-            responseBody.Should().BeEquivalentTo(_feedbackDtos);
+            responseBody.Should().BeEquivalentTo(_feedbackDtosPagination);
         });
 
         [Fact] public async Task GetById_ValidId_Test() => await Execute(async () =>
         {
-            HttpResponseMessage response = await _httpClient.GetAsync($"{ApiFeedback}/{ValidFeedbackId}");
+            var response = await _httpClient.GetAsync($"{ApiFeedback}/{ValidFeedbackId}");
             response.Should().NotBeNull();
             response.StatusCode.Should().Be(OK);
-            FeedbackDto responseBody = DeserializeObject<FeedbackDto>(await response.Content.ReadAsStringAsync());
-            responseBody.Should().BeEquivalentTo(_feedbackDto1);
+            var responseBody = DeserializeObject<FeedbackDto>(await response.Content.ReadAsStringAsync());
+            responseBody.Should().BeEquivalentTo(_feedbackDtos[0]);
         });
 
         [Fact] public async Task GetById_InvalidId_Test() => await Execute(async () =>
@@ -91,10 +84,10 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task UpdateById_ValidId_Test() => await Execute(async () =>
         {
-            FeedbackDto updatedFeedbackDto = _feedbackDto1;
-            updatedFeedbackDto.Type = _feedbackDto2.Type;
-            updatedFeedbackDto.Message = _feedbackDto2.Message;
-            var updateResponse = await _httpClient.PutAsync($"{ApiFeedback}/{ValidFeedbackId}", new StringContent(SerializeObject(_feedbackDto2), Encoding.UTF8, MediaTypeNames.Application.Json));
+            FeedbackDto updatedFeedbackDto = _feedbackDtos[0];
+            updatedFeedbackDto.Type = _feedbackDtos[1].Type;
+            updatedFeedbackDto.Message = _feedbackDtos[1].Message;
+            var updateResponse = await _httpClient.PutAsync($"{ApiFeedback}/{ValidFeedbackId}", new StringContent(SerializeObject(_feedbackDtos[1]), Encoding.UTF8, MediaTypeNames.Application.Json));
             updateResponse.Should().NotBeNull();
             updateResponse.StatusCode.Should().Be(OK);
             var updateResponseBody = DeserializeObject<FeedbackDto>(await updateResponse.Content.ReadAsStringAsync());
@@ -109,7 +102,7 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task UpdateById_InvalidId_Test() => await Execute(async () =>
         {
-            var response = await _httpClient.PutAsync($"{ApiFeedback}/{InvalidId}", new StringContent(SerializeObject(_feedbackDto2), Encoding.UTF8, MediaTypeNames.Application.Json));
+            var response = await _httpClient.PutAsync($"{ApiFeedback}/{InvalidId}", new StringContent(SerializeObject(_feedbackDtos[1]), Encoding.UTF8, MediaTypeNames.Application.Json));
             response.Should().NotBeNull();
             response.StatusCode.Should().Be(NotFound);
             var responseBody = DeserializeObject<ProblemDetails>(await response.Content.ReadAsStringAsync());
@@ -118,7 +111,7 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task DeleteById_ValidId_Test() => await Execute(async () =>
         {
-            FeedbackDto deletedFeedbackDto = _feedbackDto1;
+            FeedbackDto deletedFeedbackDto = _feedbackDtos[0];
             deletedFeedbackDto.DeletedAt = DateTime.UtcNow;
             var deleteResponse = await _httpClient.DeleteAsync($"{ApiFeedback}/{ValidFeedbackId}");
             deleteResponse.Should().NotBeNull();

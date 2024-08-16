@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using SoundSphere.Database.Context;
 using SoundSphere.Database.Dtos.Common;
-using SoundSphere.Database.Entities;
 using System.Net.Mime;
 using System.Text;
 using static Newtonsoft.Json.JsonConvert;
@@ -19,11 +18,6 @@ namespace SoundSphere.Test.Integration.Controllers
         private readonly DbFixture _dbFixture;
         private readonly CustomWebAppFactory _factory;
         private readonly HttpClient _httpClient;
-        private readonly List<User> _users = GetUsers();
-        private readonly UserDto _userDto1 = GetUserDto1();
-        private readonly UserDto _userDto2 = GetUserDto2();
-        private readonly UserDto _newUserDto = GetNewUserDto();
-        private readonly List<UserDto> _userDtos = GetUserDtos();
 
         public UserControllerIntegrationTest() { _dbFixture = new DbFixture(); _factory = new(_dbFixture); _httpClient = _factory.CreateClient(); }
 
@@ -44,7 +38,7 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task GetAll_Test() => await Execute(async () =>
         {
-            var response = await _httpClient.GetAsync(ApiUser);
+            var response = await _httpClient.PostAsync(ApiUser, new StringContent(SerializeObject(_userPayload), Encoding.UTF8, MediaTypeNames.Application.Json));
             response.Should().NotBeNull();
             response.StatusCode.Should().Be(OK);
             var responseBody = DeserializeObject<List<UserDto>>(await response.Content.ReadAsStringAsync());
@@ -57,7 +51,7 @@ namespace SoundSphere.Test.Integration.Controllers
             response.Should().NotBeNull();
             response.StatusCode.Should().Be(OK);
             var responseBody = DeserializeObject<UserDto>(await response.Content.ReadAsStringAsync());
-            responseBody.Should().BeEquivalentTo(_userDto1);
+            responseBody.Should().BeEquivalentTo(_userDtos[0]);
         });
 
         [Fact] public async Task GetById_InvalidId_Test() => await Execute(async () =>
@@ -86,14 +80,14 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task UpdateById_ValidId_Test() => await Execute(async () =>
         {
-            UserDto updatedUserDto = _userDto1;
+            UserDto updatedUserDto = _userDtos[0];
             updatedUserDto.Name = _newUserDto.Name;
             updatedUserDto.Email = _newUserDto.Email;
             updatedUserDto.Phone = _newUserDto.Phone;
-            updatedUserDto.Address = _userDto2.Address;
-            updatedUserDto.Birthday = _userDto2.Birthday;
-            updatedUserDto.ImageUrl = _userDto2.ImageUrl;
-            updatedUserDto.Role = _userDto2.Role;
+            updatedUserDto.Address = _userDtos[1].Address;
+            updatedUserDto.Birthday = _userDtos[1].Birthday;
+            updatedUserDto.ImageUrl = _userDtos[1].ImageUrl;
+            updatedUserDto.Role = _userDtos[1].Role;
             var updateResponse = await _httpClient.PutAsync($"{ApiUser}/{ValidUserId}", new StringContent(SerializeObject(updatedUserDto), Encoding.UTF8, MediaTypeNames.Application.Json));
             updateResponse.Should().NotBeNull();
             updateResponse.StatusCode.Should().Be(OK);
@@ -109,7 +103,7 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task UpdateById_InvalidId_Test() => await Execute(async () =>
         {
-            var response = await _httpClient.PutAsync($"{ApiUser}/{InvalidId}", new StringContent(SerializeObject(_userDto2), Encoding.UTF8, MediaTypeNames.Application.Json));
+            var response = await _httpClient.PutAsync($"{ApiUser}/{InvalidId}", new StringContent(SerializeObject(_userDtos[1]), Encoding.UTF8, MediaTypeNames.Application.Json));
             response.Should().NotBeNull();
             response.StatusCode.Should().Be(NotFound);
             var responseBody = DeserializeObject<ProblemDetails>(await response.Content.ReadAsStringAsync());
@@ -118,7 +112,7 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task DeleteById_ValidId_Test() => await Execute(async () =>
         {
-            UserDto deletedUserDto = _userDto1;
+            UserDto deletedUserDto = _userDtos[0];
             deletedUserDto.DeletedAt = DateTime.UtcNow;
             var deleteResponse = await _httpClient.DeleteAsync($"{ApiUser}/{ValidUserId}");
             deleteResponse.Should().NotBeNull();

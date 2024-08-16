@@ -11,10 +11,6 @@ namespace SoundSphere.Test.Integration.Repositories
     public class AlbumRepositoryIntegrationTest : IClassFixture<DbFixture>
     {
         private readonly DbFixture _dbFixture;
-        private readonly Album _album1 = GetAlbum1();
-        private readonly Album _album2 = GetAlbum2();
-        private readonly Album _newAlbum = GetNewAlbum();
-        private readonly List<Album> _albums = GetAlbums();
 
         public AlbumRepositoryIntegrationTest(DbFixture dbFixture) => _dbFixture = dbFixture;
     
@@ -29,9 +25,9 @@ namespace SoundSphere.Test.Integration.Repositories
             transaction.Rollback();
         }
 
-        [Fact] public void GetAll_Test() => Execute((albumRepository, context) => albumRepository.GetAll().Should().BeEquivalentTo(_albums));
+        [Fact] public void GetAll_Test() => Execute((albumRepository, context) => albumRepository.GetAll(_albumPayload).Should().BeEquivalentTo(_albumsPagination));
 
-        [Fact] public void GetById_ValidId_Test() => Execute((albumRepository, context) => albumRepository.GetById(ValidAlbumId).Should().BeEquivalentTo(_album1, options => options.Excluding(album => album.SimilarAlbums)));
+        [Fact] public void GetById_ValidId_Test() => Execute((albumRepository, context) => albumRepository.GetById(ValidAlbumId).Should().BeEquivalentTo(_albums[0], options => options.Excluding(album => album.SimilarAlbums)));
 
         [Fact] public void GetById_InvalidId_Test() => Execute((albumRepository, context) => albumRepository
             .Invoking(repository => repository.GetById(InvalidId))
@@ -49,25 +45,25 @@ namespace SoundSphere.Test.Integration.Repositories
 
         [Fact] public void UpdateById_ValidId_Test() => Execute((albumRepository, context) =>
         {
-            Album updatedAlbum = _album1;
-            updatedAlbum.Title = _album2.Title;
-            updatedAlbum.ImageUrl = _album2.ImageUrl;
-            updatedAlbum.ReleaseDate = _album2.ReleaseDate;
-            updatedAlbum.SimilarAlbums = _album2.SimilarAlbums;
-            Album result = albumRepository.UpdateById(_album2, ValidAlbumId);
+            Album updatedAlbum = _albums[0];
+            updatedAlbum.Title = _albums[1].Title;
+            updatedAlbum.ImageUrl = _albums[1].ImageUrl;
+            updatedAlbum.ReleaseDate = _albums[1].ReleaseDate;
+            updatedAlbum.SimilarAlbums = _albums[1].SimilarAlbums;
+            Album result = albumRepository.UpdateById(_albums[1], ValidAlbumId);
             result.Should().BeEquivalentTo(updatedAlbum, options => options.Excluding(album => album.UpdatedAt).Excluding(album => album.SimilarAlbums));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
         [Fact] public void UpdateById_InvalidId_Test() => Execute((albumRepository, context) => albumRepository
-            .Invoking(repository => repository.UpdateById(_album2, InvalidId))
+            .Invoking(repository => repository.UpdateById(_albums[1], InvalidId))
             .Should().Throw<ResourceNotFoundException>()
             .WithMessage(string.Format(AlbumNotFound, InvalidId)));
 
         [Fact] public void DeleteById_ValidId_Test() => Execute((albumRepository, context) =>
         {
             Album result = albumRepository.DeleteById(ValidAlbumId);
-            result.Should().BeEquivalentTo(_album1, options => options.Excluding(album => album.DeletedAt).Excluding(album => album.SimilarAlbums));
+            result.Should().BeEquivalentTo(_albums[0], options => options.Excluding(album => album.DeletedAt).Excluding(album => album.SimilarAlbums));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 

@@ -18,16 +18,6 @@ namespace SoundSphere.Test.Integration.Services
     {
         private readonly DbFixture _dbFixture;
         private readonly IMapper _mapper;
-        private readonly Song _song1 = GetSong1();
-        private readonly Song _song2 = GetSong2();
-        private readonly Song _newSong = GetNewSong();
-        private readonly List<Song> _songs = GetSongs();
-        private readonly SongDto _songDto1 = GetSongDto1();
-        private readonly SongDto _songDto2 = GetSongDto2();
-        private readonly SongDto _newSongDto = GetNewSongDto();
-        private readonly List<SongDto> _songDtos = GetSongDtos();
-        private readonly List<Album> _albums = GetAlbums();
-        private readonly List<Artist> _artists = GetArtists();
 
         public SongServiceIntegrationTest(DbFixture dbFixture) => (_dbFixture, _mapper) = (dbFixture, new MapperConfiguration(config => config.AddProfile<AutoMapperProfile>()).CreateMapper());
 
@@ -43,9 +33,9 @@ namespace SoundSphere.Test.Integration.Services
             transaction.Rollback();
         }
 
-        [Fact] public void GetAll_Test() => Execute((songService, context) => songService.GetAll().Should().BeEquivalentTo(_songDtos));
+        [Fact] public void GetAll_Test() => Execute((songService, context) => songService.GetAll(_songPayload).Should().BeEquivalentTo(_songDtosPagination));
 
-        [Fact] public void GetById_ValidId_Test() => Execute((songService, context) => songService.GetById(ValidSongId).Should().BeEquivalentTo(_songDto1));
+        [Fact] public void GetById_ValidId_Test() => Execute((songService, context) => songService.GetById(ValidSongId).Should().BeEquivalentTo(_songDtos[0]));
 
         [Fact] public void GetById_InvalidId_Test() => Execute((songService, context) => songService
             .Invoking(service => service.GetById(InvalidId))
@@ -63,30 +53,30 @@ namespace SoundSphere.Test.Integration.Services
 
         [Fact] public void UpdateById_ValidId_Test() => Execute((songService, context) =>
         {
-            Song updatedSong = _song1;
-            updatedSong.Title = _song2.Title;
-            updatedSong.ImageUrl = _song2.ImageUrl;
-            updatedSong.Genre = _song2.Genre;
-            updatedSong.ReleaseDate = _song2.ReleaseDate;
-            updatedSong.DurationSeconds = _song2.DurationSeconds;
-            updatedSong.Album = _song2.Album;
-            updatedSong.Artists = _song2.Artists;
-            updatedSong.SimilarSongs = _song2.SimilarSongs;
+            Song updatedSong = _songs[0];
+            updatedSong.Title = _songs[1].Title;
+            updatedSong.ImageUrl = _songs[1].ImageUrl;
+            updatedSong.Genre = _songs[1].Genre;
+            updatedSong.ReleaseDate = _songs[1].ReleaseDate;
+            updatedSong.DurationSeconds = _songs[1].DurationSeconds;
+            updatedSong.Album = _songs[1].Album;
+            updatedSong.Artists = _songs[1].Artists;
+            updatedSong.SimilarSongs = _songs[1].SimilarSongs;
             SongDto updatedSongDto = updatedSong.ToDto(_mapper);
-            SongDto result = songService.UpdateById(_songDto2, ValidSongId);
+            SongDto result = songService.UpdateById(_songDtos[1], ValidSongId);
             result.Should().BeEquivalentTo(updatedSongDto, options => options.Excluding(song => song.UpdatedAt));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
         [Fact] public void UpdateById_InvalidId_Test() => Execute((songService, context) => songService
-            .Invoking(service => service.UpdateById(_songDto2, InvalidId))
+            .Invoking(service => service.UpdateById(_songDtos[1], InvalidId))
             .Should().Throw<ResourceNotFoundException>()
             .WithMessage(string.Format(SongNotFound, InvalidId)));
 
         [Fact] public void DeleteById_ValidId_Test() => Execute((songService, context) =>
         {
             SongDto result = songService.DeleteById(ValidSongId);
-            result.Should().BeEquivalentTo(_songDto1, options => options.Excluding(song => song.DeletedAt));
+            result.Should().BeEquivalentTo(_songDtos[0], options => options.Excluding(song => song.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 

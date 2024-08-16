@@ -13,12 +13,6 @@ namespace SoundSphere.Test.Integration.Repositories
     public class SongRepositoryIntegrationTest : IClassFixture<DbFixture>
     {
         private readonly DbFixture _dbFixture;
-        private readonly Song _song1 = GetSong1();
-        private readonly Song _song2 = GetSong2();
-        private readonly Song _newSong = GetNewSong();
-        private readonly List<Song> _songs = GetSongs();
-        private readonly List<Album> _albums = GetAlbums();
-        private readonly List<Artist> _artists = GetArtists();
 
         public SongRepositoryIntegrationTest(DbFixture dbFixture) => _dbFixture = dbFixture;
 
@@ -34,9 +28,9 @@ namespace SoundSphere.Test.Integration.Repositories
             transaction.Rollback();
         }
 
-        [Fact] public void GetAll_Test() => Execute((songRepository, context) => songRepository.GetAll().Should().BeEquivalentTo(_songs));
+        [Fact] public void GetAll_Test() => Execute((songRepository, context) => songRepository.GetAll(_songPayload).Should().BeEquivalentTo(_songsPagination));
 
-        [Fact] public void GetById_ValidId_Test() => Execute((songRepository, context) => songRepository.GetById(ValidSongId).Should().BeEquivalentTo(_song1, options => options.Excluding(song => song.SimilarSongs)));
+        [Fact] public void GetById_ValidId_Test() => Execute((songRepository, context) => songRepository.GetById(ValidSongId).Should().BeEquivalentTo(_songs[0], options => options.Excluding(song => song.SimilarSongs)));
 
         [Fact] public void GetById_InvalidId_Test() => Execute((songRepository, context) => songRepository
             .Invoking(repository => repository.GetById(InvalidId))
@@ -56,29 +50,29 @@ namespace SoundSphere.Test.Integration.Repositories
 
         [Fact] public void UpdateById_ValidId_Test() => Execute((songRepository, context) =>
         {
-            Song updatedSong = _song1;
-            updatedSong.Title = _song2.Title;
-            updatedSong.ImageUrl = _song2.ImageUrl;
-            updatedSong.Genre = _song2.Genre;
-            updatedSong.ReleaseDate = _song2.ReleaseDate;
-            updatedSong.DurationSeconds = _song2.DurationSeconds;
-            updatedSong.Album = context.Albums.Find(_song2.Album.Id) ?? _song2.Album;
-            updatedSong.Artists = _song2.Artists.Select(artist => context.Artists.Find(artist.Id) ?? artist).ToList();
-            updatedSong.SimilarSongs = _song2.SimilarSongs;
+            Song updatedSong = _songs[0];
+            updatedSong.Title = _songs[1].Title;
+            updatedSong.ImageUrl = _songs[1].ImageUrl;
+            updatedSong.Genre = _songs[1].Genre;
+            updatedSong.ReleaseDate = _songs[1].ReleaseDate;
+            updatedSong.DurationSeconds = _songs[1].DurationSeconds;
+            updatedSong.Album = context.Albums.Find(_songs[1].Album.Id) ?? _songs[1].Album;
+            updatedSong.Artists = _songs[1].Artists.Select(artist => context.Artists.Find(artist.Id) ?? artist).ToList();
+            updatedSong.SimilarSongs = _songs[1].SimilarSongs;
             Song result = songRepository.UpdateById(updatedSong, ValidSongId);
             result.Should().BeEquivalentTo(updatedSong, options => options.Excluding(song => song.UpdatedAt).Excluding(song => song.SimilarSongs));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
         [Fact] public void UpdateById_InvalidId_Test() => Execute((songRepository, context) => songRepository
-            .Invoking(repository => repository.UpdateById(_song2, InvalidId))
+            .Invoking(repository => repository.UpdateById(_songs[1], InvalidId))
             .Should().Throw<ResourceNotFoundException>()
             .WithMessage(string.Format(SongNotFound, InvalidId)));
 
         [Fact] public void DeleteById_ValidId_Test() => Execute((songRepository, context) =>
         {
             Song result = songRepository.DeleteById(ValidSongId);
-            result.Should().BeEquivalentTo(_song1, options => options.Excluding(song => song.DeletedAt).Excluding(song => song.SimilarSongs));
+            result.Should().BeEquivalentTo(_songs[0], options => options.Excluding(song => song.DeletedAt).Excluding(song => song.SimilarSongs));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 

@@ -14,29 +14,25 @@ namespace SoundSphere.Test.Unit.Controllers
     {
         private readonly Mock<IAlbumService> _albumServiceMock = new();
         private readonly AlbumController _albumController;
-        private readonly AlbumDto _albumDto1 = GetAlbumDto1();
-        private readonly AlbumDto _albumDto2 = GetAlbumDto2();
-        private readonly AlbumDto _newAlbumDto = GetNewAlbumDto();
-        private readonly List<AlbumDto> _albumDtos = GetAlbumDtos();
 
         public AlbumControllerTest() => _albumController = new(_albumServiceMock.Object);
 
         [Fact] public void GetAll_Test()
         {
-            _albumServiceMock.Setup(mock => mock.GetAll()).Returns(_albumDtos);
-            OkObjectResult? result = _albumController.GetAll() as OkObjectResult;
+            _albumServiceMock.Setup(mock => mock.GetAll(_albumPayload)).Returns(_albumDtosPagination);
+            OkObjectResult? result = _albumController.GetAll(_albumPayload) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_albumDtos);
+            result?.Value.Should().BeEquivalentTo(_albumDtosPagination);
         }
 
         [Fact] public void GetById_Test()
         {
-            _albumServiceMock.Setup(mock => mock.GetById(ValidAlbumId)).Returns(_albumDto1);
+            _albumServiceMock.Setup(mock => mock.GetById(ValidAlbumId)).Returns(_albumDtos[0]);
             OkObjectResult? result = _albumController.GetById(ValidAlbumId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_albumDto1);
+            result?.Value.Should().BeEquivalentTo(_albumDtos[0]);
         }
 
         [Fact] public void Add_Test()
@@ -50,13 +46,13 @@ namespace SoundSphere.Test.Unit.Controllers
 
         [Fact] public void UpdateById_Test()
         {
-            AlbumDto updatedAlbumDto = _albumDto1;
-            updatedAlbumDto.Title = _albumDto2.Title;
-            updatedAlbumDto.ImageUrl = _albumDto2.ImageUrl;
-            updatedAlbumDto.ReleaseDate = _albumDto2.ReleaseDate;
-            updatedAlbumDto.SimilarAlbumsIds = _albumDto2.SimilarAlbumsIds;
+            AlbumDto updatedAlbumDto = _albumDtos[0];
+            updatedAlbumDto.Title = _albumDtos[1].Title;
+            updatedAlbumDto.ImageUrl = _albumDtos[1].ImageUrl;
+            updatedAlbumDto.ReleaseDate = _albumDtos[1].ReleaseDate;
+            updatedAlbumDto.SimilarAlbumsIds = _albumDtos[1].SimilarAlbumsIds;
             _albumServiceMock.Setup(mock => mock.UpdateById(It.IsAny<AlbumDto>(), ValidAlbumId)).Returns(updatedAlbumDto);
-            OkObjectResult? result = _albumController.UpdateById(_albumDto2, ValidAlbumId) as OkObjectResult;
+            OkObjectResult? result = _albumController.UpdateById(_albumDtos[1], ValidAlbumId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(updatedAlbumDto);
@@ -64,7 +60,7 @@ namespace SoundSphere.Test.Unit.Controllers
 
         [Fact] public void DeleteById_Test()
         {
-            AlbumDto deletedAlbumDto = _albumDto1;
+            AlbumDto deletedAlbumDto = _albumDtos[0];
             deletedAlbumDto.DeletedAt = DateTime.UtcNow;
             _albumServiceMock.Setup(mock => mock.DeleteById(ValidAlbumId)).Returns(deletedAlbumDto);
             OkObjectResult? result = _albumController.DeleteById(ValidAlbumId) as OkObjectResult;

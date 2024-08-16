@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using SoundSphere.Database.Context;
 using SoundSphere.Database.Dtos.Common;
-using SoundSphere.Database.Entities;
 using System.Net.Mime;
 using System.Text;
 using static Newtonsoft.Json.JsonConvert;
@@ -20,12 +19,6 @@ namespace SoundSphere.Test.Integration.Controllers
         private readonly DbFixture _dbFixture;
         private readonly CustomWebAppFactory _factory;
         private readonly HttpClient _httpClient;
-        private readonly List<Notification> _notifications = GetNotifications();
-        private readonly NotificationDto _notificationDto1 = GetNotificationDto1();
-        private readonly NotificationDto _notificationDto2 = GetNotificationDto2();
-        private readonly NotificationDto _newNotificationDto = GetNewNotificationDto();
-        private readonly List<NotificationDto> _notificationDtos = GetNotificationDtos();
-        private readonly List<User> _users = GetUsers();
 
         public NotificationControllerIntegrationTest() { _dbFixture = new DbFixture(); _factory = new(_dbFixture); _httpClient = _factory.CreateClient(); }
 
@@ -50,11 +43,11 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task GetAll_Test() => await Execute(async () =>
         {
-            var response = await _httpClient.GetAsync(ApiNotification);
+            var response = await _httpClient.PostAsync(ApiNotification, new StringContent(SerializeObject(_notificationPayload), Encoding.UTF8, MediaTypeNames.Application.Json));
             response.Should().NotBeNull();
             response.StatusCode.Should().Be(OK);
             var responseBody = DeserializeObject<List<NotificationDto>>(await response.Content.ReadAsStringAsync());
-            responseBody.Should().BeEquivalentTo(_notificationDtos);
+            responseBody.Should().BeEquivalentTo(_notificationDtosPagination);
         });
 
         [Fact] public async Task GetById_ValidId_Test() => await Execute(async () =>
@@ -63,7 +56,7 @@ namespace SoundSphere.Test.Integration.Controllers
             response.Should().NotBeNull();
             response.StatusCode.Should().Be(OK);
             var responseBody = DeserializeObject<NotificationDto>(await response.Content.ReadAsStringAsync());
-            responseBody.Should().BeEquivalentTo(_notificationDto1);
+            responseBody.Should().BeEquivalentTo(_notificationDtos[0]);
         });
 
         [Fact] public async Task GetById_InvalidId_Test() => await Execute(async () =>
@@ -92,11 +85,11 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task UpdateById_ValidId_Test() => await Execute(async () =>
         {
-            NotificationDto updatedNotificationDto = _notificationDto1;
-            updatedNotificationDto.Type = _notificationDto2.Type;
-            updatedNotificationDto.Message = _notificationDto2.Message;
-            updatedNotificationDto.IsRead = _notificationDto2.IsRead;
-            var updateResponse = await _httpClient.PutAsync($"{ApiNotification}/{ValidNotificationId}", new StringContent(SerializeObject(_notificationDto2), Encoding.UTF8, MediaTypeNames.Application.Json));
+            NotificationDto updatedNotificationDto = _notificationDtos[0];
+            updatedNotificationDto.Type = _notificationDtos[1].Type;
+            updatedNotificationDto.Message = _notificationDtos[1].Message;
+            updatedNotificationDto.IsRead = _notificationDtos[1].IsRead;
+            var updateResponse = await _httpClient.PutAsync($"{ApiNotification}/{ValidNotificationId}", new StringContent(SerializeObject(_notificationDtos[1]), Encoding.UTF8, MediaTypeNames.Application.Json));
             updateResponse.Should().NotBeNull();
             updateResponse.StatusCode.Should().Be(OK);
             var updateResponseBody = DeserializeObject<NotificationDto>(await updateResponse.Content.ReadAsStringAsync());
@@ -111,7 +104,7 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task UpdateById_InvalidId_Test() => await Execute(async () =>
         {
-            var response = await _httpClient.PutAsync($"{ApiNotification}/{InvalidId}", new StringContent(SerializeObject(_notificationDto2), Encoding.UTF8, MediaTypeNames.Application.Json));
+            var response = await _httpClient.PutAsync($"{ApiNotification}/{InvalidId}", new StringContent(SerializeObject(_notificationDtos[1]), Encoding.UTF8, MediaTypeNames.Application.Json));
             response.Should().NotBeNull();
             response.StatusCode.Should().Be(NotFound);
             var responseBody = DeserializeObject<ProblemDetails>(await response.Content.ReadAsStringAsync());
@@ -120,7 +113,7 @@ namespace SoundSphere.Test.Integration.Controllers
 
         [Fact] public async Task DeleteById_ValidId_Test() => await Execute(async () =>
         {
-            NotificationDto deletedNotificationDto = _notificationDto1;
+            NotificationDto deletedNotificationDto = _notificationDtos[0];
             deletedNotificationDto.DeletedAt = DateTime.UtcNow;
             var deleteResponse = await _httpClient.DeleteAsync($"{ApiNotification}/{ValidNotificationId}");
             deleteResponse.Should().NotBeNull();

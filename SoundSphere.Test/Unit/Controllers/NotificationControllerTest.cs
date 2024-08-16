@@ -14,29 +14,25 @@ namespace SoundSphere.Test.Unit.Controllers
     {
         private readonly Mock<INotificationService> _notificationServiceMock = new();
         private readonly NotificationController _notificationController;
-        private readonly NotificationDto _notificationDto1 = GetNotificationDto1();
-        private readonly NotificationDto _notificationDto2 = GetNotificationDto1();
-        private readonly NotificationDto _newNotificationDto = GetNewNotificationDto();
-        private readonly List<NotificationDto> _notificationDtos = GetNotificationDtos();
 
         public NotificationControllerTest() => _notificationController = new(_notificationServiceMock.Object);
 
         [Fact] public void GetAll_Test()
         {
-            _notificationServiceMock.Setup(mock => mock.GetAll()).Returns(_notificationDtos);
-            OkObjectResult? result = _notificationController.GetAll() as OkObjectResult;
+            _notificationServiceMock.Setup(mock => mock.GetAll(_notificationPayload)).Returns(_notificationDtosPagination);
+            OkObjectResult? result = _notificationController.GetAll(_notificationPayload) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_notificationDtos);
+            result?.Value.Should().BeEquivalentTo(_notificationDtosPagination);
         }
 
         [Fact] public void GetById_Test()
         {
-            _notificationServiceMock.Setup(mock => mock.GetById(ValidNotificationId)).Returns(_notificationDto1);
+            _notificationServiceMock.Setup(mock => mock.GetById(ValidNotificationId)).Returns(_notificationDtos[0]);
             OkObjectResult? result = _notificationController.GetById(ValidNotificationId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_notificationDto1);
+            result?.Value.Should().BeEquivalentTo(_notificationDtos[0]);
         }
 
         [Fact] public void Add_Test()
@@ -50,12 +46,12 @@ namespace SoundSphere.Test.Unit.Controllers
 
         [Fact] public void UpdateById_Test()
         {
-            NotificationDto updatedNotificationDto = _notificationDto1;
-            updatedNotificationDto.Type = _notificationDto2.Type;
-            updatedNotificationDto.Message = _notificationDto2.Message;
-            updatedNotificationDto.IsRead = _notificationDto2.IsRead;
+            NotificationDto updatedNotificationDto = _notificationDtos[0];
+            updatedNotificationDto.Type = _notificationDtos[1].Type;
+            updatedNotificationDto.Message = _notificationDtos[1].Message;
+            updatedNotificationDto.IsRead = _notificationDtos[1].IsRead;
             _notificationServiceMock.Setup(mock => mock.UpdateById(It.IsAny<NotificationDto>(), ValidNotificationId)).Returns(updatedNotificationDto);
-            OkObjectResult? result = _notificationController.UpdateById(_notificationDto2, ValidNotificationId) as OkObjectResult;
+            OkObjectResult? result = _notificationController.UpdateById(_notificationDtos[1], ValidNotificationId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(updatedNotificationDto);
@@ -63,7 +59,7 @@ namespace SoundSphere.Test.Unit.Controllers
 
         [Fact] public void DeleteById_Test()
         {
-            NotificationDto deletedNotificationDto = _notificationDto1;
+            NotificationDto deletedNotificationDto = _notificationDtos[0];
             deletedNotificationDto.DeletedAt = DateTime.UtcNow;
             _notificationServiceMock.Setup(mock => mock.DeleteById(ValidNotificationId)).Returns(deletedNotificationDto);
             OkObjectResult? result = _notificationController.DeleteById(ValidNotificationId) as OkObjectResult;

@@ -14,29 +14,25 @@ namespace SoundSphere.Test.Unit.Controllers
     {
         private readonly Mock<IUserService> _userServiceMock = new();
         private readonly UserController _userController;
-        private readonly UserDto _userDto1 = GetUserDto1();
-        private readonly UserDto _userDto2 = GetUserDto1();
-        private readonly UserDto _newUserDto = GetNewUserDto();
-        private readonly List<UserDto> _userDtos = GetUserDtos();
 
         public UserControllerTest() => _userController = new(_userServiceMock.Object);
 
         [Fact] public void GetAll_Test()
         {
-            _userServiceMock.Setup(mock => mock.GetAll()).Returns(_userDtos);
-            OkObjectResult? result = _userController.GetAll() as OkObjectResult;
+            _userServiceMock.Setup(mock => mock.GetAll(_userPayload)).Returns(_userDtosPagination);
+            OkObjectResult? result = _userController.GetAll(_userPayload) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_userDtos);
+            result?.Value.Should().BeEquivalentTo(_userDtosPagination);
         }
 
         [Fact] public void GetById_Test()
         {
-            _userServiceMock.Setup(mock => mock.GetById(ValidUserId)).Returns(_userDto1);
+            _userServiceMock.Setup(mock => mock.GetById(ValidUserId)).Returns(_userDtos[0]);
             OkObjectResult? result = _userController.GetById(ValidUserId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_userDto1);
+            result?.Value.Should().BeEquivalentTo(_userDtos[0]);
         }
 
         [Fact] public void Add_Test()
@@ -50,16 +46,16 @@ namespace SoundSphere.Test.Unit.Controllers
 
         [Fact] public void UpdateById_Test()
         {
-            UserDto updatedUserDto = _userDto1;
-            updatedUserDto.Name = _userDto2.Name;
-            updatedUserDto.Email = _userDto2.Email;
-            updatedUserDto.Phone = _userDto2.Phone;
-            updatedUserDto.Address = _userDto2.Address;
-            updatedUserDto.Birthday = _userDto2.Birthday;
-            updatedUserDto.ImageUrl = _userDto2.ImageUrl;
-            updatedUserDto.Role = _userDto2.Role;
+            UserDto updatedUserDto = _userDtos[0];
+            updatedUserDto.Name = _userDtos[1].Name;
+            updatedUserDto.Email = _userDtos[1].Email;
+            updatedUserDto.Phone = _userDtos[1].Phone;
+            updatedUserDto.Address = _userDtos[1].Address;
+            updatedUserDto.Birthday = _userDtos[1].Birthday;
+            updatedUserDto.ImageUrl = _userDtos[1].ImageUrl;
+            updatedUserDto.Role = _userDtos[1].Role;
             _userServiceMock.Setup(mock => mock.UpdateById(It.IsAny<UserDto>(), ValidUserId)).Returns(updatedUserDto);
-            OkObjectResult? result = _userController.UpdateById(_userDto2, ValidUserId) as OkObjectResult;
+            OkObjectResult? result = _userController.UpdateById(_userDtos[1], ValidUserId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(updatedUserDto);
@@ -67,7 +63,7 @@ namespace SoundSphere.Test.Unit.Controllers
 
         [Fact] public void DeleteById_Test()
         {
-            UserDto deletedUserDto = _userDto1;
+            UserDto deletedUserDto = _userDtos[0];
             deletedUserDto.DeletedAt = DateTime.UtcNow;
             _userServiceMock.Setup(mock => mock.DeleteById(ValidUserId)).Returns(deletedUserDto);
             OkObjectResult? result = _userController.DeleteById(ValidUserId) as OkObjectResult;

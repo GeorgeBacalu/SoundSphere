@@ -22,16 +22,6 @@ namespace SoundSphere.Test.Unit.Services
         private readonly Mock<IArtistRepository> _artistRepositoryMock = new();
         private readonly ISongService _songService;
         private readonly IMapper _mapper;
-        private readonly Song _song1 = GetSong1();
-        private readonly Song _song2 = GetSong2();
-        private readonly Song _newSong = GetNewSong();
-        private readonly List<Song> _songs = GetSongs();
-        private readonly SongDto _songDto1 = GetSongDto1();
-        private readonly SongDto _songDto2 = GetSongDto2();
-        private readonly SongDto _newSongDto = GetNewSongDto();
-        private readonly List<SongDto> _songDtos = GetSongDtos();
-        private readonly Album _album1 = GetAlbum1();
-        private readonly List<Artist> _artists1 = [GetArtist1()];
 
         public SongServiceTest()
         {
@@ -41,14 +31,14 @@ namespace SoundSphere.Test.Unit.Services
 
         [Fact] public void GetAll_Test()
         {
-            _songRepositoryMock.Setup(mock => mock.GetAll()).Returns(_songs);
-            _songService.GetAll().Should().BeEquivalentTo(_songDtos);
+            _songRepositoryMock.Setup(mock => mock.GetAll(_songPayload)).Returns(_songsPagination);
+            _songService.GetAll(_songPayload).Should().BeEquivalentTo(_songDtosPagination);
         }
 
         [Fact] public void GetById_ValidId_Test()
         {
-            _songRepositoryMock.Setup(mock => mock.GetById(ValidSongId)).Returns(_song1);
-            _songService.GetById(ValidSongId).Should().BeEquivalentTo(_songDto1);
+            _songRepositoryMock.Setup(mock => mock.GetById(ValidSongId)).Returns(_songs[0]);
+            _songService.GetById(ValidSongId).Should().BeEquivalentTo(_songDtos[0]);
         }
 
         [Fact] public void GetById_InvalidId_Test()
@@ -62,8 +52,8 @@ namespace SoundSphere.Test.Unit.Services
 
         [Fact] public void Add_Test()
         {
-            _artists1.ForEach(artist => _artistRepositoryMock.Setup(mock => mock.GetById(artist.Id)).Returns(artist));
-            _albumRepositoryMock.Setup(mock => mock.GetById(ValidAlbumId)).Returns(_album1);
+            _artists.Take(1).ToList().ForEach(artist => _artistRepositoryMock.Setup(mock => mock.GetById(artist.Id)).Returns(artist));
+            _albumRepositoryMock.Setup(mock => mock.GetById(ValidAlbumId)).Returns(_albums[0]);
             _songRepositoryMock.Setup(mock => mock.Add(It.IsAny<Song>())).Returns(_newSong);
             _songService.Add(_newSongDto).Should().BeEquivalentTo(_newSongDto, options => options.Excluding(song => song.Id).Excluding(song => song.CreatedAt).Excluding(song => song.UpdatedAt));
             _songRepositoryMock.Verify(mock => mock.Add(It.IsAny<Song>()));
@@ -71,25 +61,25 @@ namespace SoundSphere.Test.Unit.Services
 
         [Fact] public void UpdateById_ValidId_Test()
         {
-            Song updatedSong = _song1;
-            updatedSong.Title = _song2.Title;
-            updatedSong.ImageUrl = _song2.ImageUrl;
-            updatedSong.Genre = _song2.Genre;
-            updatedSong.ReleaseDate = _song2.ReleaseDate;
-            updatedSong.DurationSeconds = _song2.DurationSeconds;
-            updatedSong.Album = _song2.Album;
-            updatedSong.Artists = _song2.Artists;
-            updatedSong.SimilarSongs = _song2.SimilarSongs;
+            Song updatedSong = _songs[0];
+            updatedSong.Title = _songs[1].Title;
+            updatedSong.ImageUrl = _songs[1].ImageUrl;
+            updatedSong.Genre = _songs[1].Genre;
+            updatedSong.ReleaseDate = _songs[1].ReleaseDate;
+            updatedSong.DurationSeconds = _songs[1].DurationSeconds;
+            updatedSong.Album = _songs[1].Album;
+            updatedSong.Artists = _songs[1].Artists;
+            updatedSong.SimilarSongs = _songs[1].SimilarSongs;
             SongDto updatedSongDto = updatedSong.ToDto(_mapper);
             _songRepositoryMock.Setup(mock => mock.UpdateById(It.IsAny<Song>(), ValidSongId)).Returns(updatedSong);
-            _songService.UpdateById(_songDto2, ValidSongId).Should().BeEquivalentTo(updatedSongDto);
+            _songService.UpdateById(_songDtos[1], ValidSongId).Should().BeEquivalentTo(updatedSongDto);
             _songRepositoryMock.Verify(mock => mock.UpdateById(It.IsAny<Song>(), ValidSongId));
         }
 
         [Fact] public void UpdateById_InvalidId_Test()
         {
             _songRepositoryMock.Setup(mock => mock.UpdateById(It.IsAny<Song>(), InvalidId)).Throws(new ResourceNotFoundException(string.Format(SongNotFound, InvalidId)));
-            _songService.Invoking(service => service.UpdateById(_songDto2, InvalidId))
+            _songService.Invoking(service => service.UpdateById(_songDtos[1], InvalidId))
                 .Should().Throw<ResourceNotFoundException>()
                 .WithMessage(string.Format(SongNotFound, InvalidId));
             _songRepositoryMock.Verify(mock => mock.UpdateById(It.IsAny<Song>(), InvalidId));
@@ -97,7 +87,7 @@ namespace SoundSphere.Test.Unit.Services
 
         [Fact] public void DeleteById_ValidId_Test()
         {
-            Song deletedSong = _song1;
+            Song deletedSong = _songs[0];
             deletedSong.DeletedAt = DateTime.UtcNow;
             SongDto deletedSongDto = deletedSong.ToDto(_mapper);
             _songRepositoryMock.Setup(mock => mock.DeleteById(ValidSongId)).Returns(deletedSong);

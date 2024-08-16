@@ -14,29 +14,25 @@ namespace SoundSphere.Test.Unit.Controllers
     {
         private readonly Mock<IPlaylistService> _playlistServiceMock = new();
         private readonly PlaylistController _playlistController;
-        private readonly PlaylistDto _playlistDto1 = GetPlaylistDto1();
-        private readonly PlaylistDto _playlistDto2 = GetPlaylistDto1();
-        private readonly PlaylistDto _newPlaylistDto = GetNewPlaylistDto();
-        private readonly List<PlaylistDto> _playlistDtos = GetPlaylistDtos();
 
         public PlaylistControllerTest() => _playlistController = new(_playlistServiceMock.Object);
 
         [Fact] public void GetAll_Test()
         {
-            _playlistServiceMock.Setup(mock => mock.GetAll()).Returns(_playlistDtos);
-            OkObjectResult? result = _playlistController.GetAll() as OkObjectResult;
+            _playlistServiceMock.Setup(mock => mock.GetAll(_playlistPayload)).Returns(_playlistDtosPagination);
+            OkObjectResult? result = _playlistController.GetAll(_playlistPayload) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_playlistDtos);
+            result?.Value.Should().BeEquivalentTo(_playlistDtosPagination);
         }
 
         [Fact] public void GetById_Test()
         {
-            _playlistServiceMock.Setup(mock => mock.GetById(ValidPlaylistId)).Returns(_playlistDto1);
+            _playlistServiceMock.Setup(mock => mock.GetById(ValidPlaylistId)).Returns(_playlistDtos[0]);
             OkObjectResult? result = _playlistController.GetById(ValidPlaylistId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_playlistDto1);
+            result?.Value.Should().BeEquivalentTo(_playlistDtos[0]);
         }
 
         [Fact] public void Add_Test()
@@ -50,10 +46,10 @@ namespace SoundSphere.Test.Unit.Controllers
 
         [Fact] public void UpdateById_Test()
         {
-            PlaylistDto updatedPlaylistDto = _playlistDto1;
-            updatedPlaylistDto.Title = _playlistDto2.Title;
+            PlaylistDto updatedPlaylistDto = _playlistDtos[0];
+            updatedPlaylistDto.Title = _playlistDtos[1].Title;
             _playlistServiceMock.Setup(mock => mock.UpdateById(It.IsAny<PlaylistDto>(), ValidPlaylistId)).Returns(updatedPlaylistDto);
-            OkObjectResult? result = _playlistController.UpdateById(_playlistDto2, ValidPlaylistId) as OkObjectResult;
+            OkObjectResult? result = _playlistController.UpdateById(_playlistDtos[1], ValidPlaylistId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(updatedPlaylistDto);
@@ -61,7 +57,7 @@ namespace SoundSphere.Test.Unit.Controllers
 
         [Fact] public void DeleteById_Test()
         {
-            PlaylistDto deletedPlaylistDto = _playlistDto1;
+            PlaylistDto deletedPlaylistDto = _playlistDtos[0];
             deletedPlaylistDto.DeletedAt = DateTime.UtcNow;
             _playlistServiceMock.Setup(mock => mock.DeleteById(ValidPlaylistId)).Returns(deletedPlaylistDto);
             OkObjectResult? result = _playlistController.DeleteById(ValidPlaylistId) as OkObjectResult;
