@@ -9,15 +9,15 @@ namespace SoundSphere.Core.Mappings
     {
         public static List<FeedbackDto> ToDtos(this List<Feedback> feedbacks, IMapper mapper) => feedbacks.Select(feedback => feedback.ToDto(mapper)).ToList();
 
-        public static List<Feedback> ToEntities(this List<FeedbackDto> feedbackDtos, IUserRepository userRepository, IMapper mapper) =>
-            feedbackDtos.Select(feedbackDto => feedbackDto.ToEntity(userRepository, mapper)).ToList();
+        public static async Task<List<Feedback>> ToEntitiesAsync(this List<FeedbackDto> feedbackDtos, IUserRepository userRepository, IMapper mapper) =>
+            (await Task.WhenAll(feedbackDtos.Select(feedbackDto => feedbackDto.ToEntityAsync(userRepository, mapper)))).ToList();
 
         public static FeedbackDto ToDto(this Feedback feedback, IMapper mapper) => mapper.Map<FeedbackDto>(feedback);
 
-        public static Feedback ToEntity(this FeedbackDto feedbackDto, IUserRepository userRepository, IMapper mapper)
+        public static async Task<Feedback> ToEntityAsync(this FeedbackDto feedbackDto, IUserRepository userRepository, IMapper mapper)
         {
             Feedback feedback = mapper.Map<Feedback>(feedbackDto);
-            feedback.User = userRepository.GetById(feedbackDto.UserId);
+            feedback.User = await userRepository.GetByIdAsync(feedbackDto.UserId);
             return feedback;
         }
     }

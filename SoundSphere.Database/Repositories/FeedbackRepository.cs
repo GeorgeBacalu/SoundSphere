@@ -15,41 +15,41 @@ namespace SoundSphere.Database.Repositories
 
         public FeedbackRepository(AppDbContext context) => _context = context;
 
-        public List<Feedback> GetAll(FeedbackPaginationRequest payload) => _context.Feedbacks
+        public async Task<List<Feedback>> GetAllAsync(FeedbackPaginationRequest payload) => await _context.Feedbacks
             .Include(feedback => feedback.User)
             .Where(feedback => feedback.DeletedAt == null)
             .ApplyPagination(payload)
-            .ToList();
+            .ToListAsync();
 
-        public Feedback GetById(Guid id) => _context.Feedbacks
+        public async Task<Feedback> GetByIdAsync(Guid id) => await _context.Feedbacks
             .Include(feedback => feedback.User)
             .Where(feedback => feedback.DeletedAt == null)
-            .SingleOrDefault(feedback => feedback.Id == id)
+            .SingleOrDefaultAsync(feedback => feedback.Id == id)
             ?? throw new ResourceNotFoundException(string.Format(FeedbackNotFound, id));
 
-        public Feedback Add(Feedback feedback)
+        public async Task<Feedback> AddAsync(Feedback feedback)
         {
             _context.Feedbacks.Add(feedback);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return feedback;
         }
 
-        public Feedback UpdateById(Feedback feedback, Guid id)
+        public async Task<Feedback> UpdateByIdAsync(Feedback feedback, Guid id)
         {
-            Feedback feedbackToUpdate = GetById(id);
+            Feedback feedbackToUpdate = await GetByIdAsync(id);
             feedbackToUpdate.Type = feedback.Type;
             feedbackToUpdate.Message = feedback.Message;
             if (_context.Entry(feedbackToUpdate).State == EntityState.Modified)
                 feedbackToUpdate.UpdatedAt = DateTime.UtcNow;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return feedbackToUpdate;
         }
 
-        public Feedback DeleteById(Guid id)
+        public async Task<Feedback> DeleteByIdAsync(Guid id)
         {
-            Feedback feedbackToDelete = GetById(id);
+            Feedback feedbackToDelete = await GetByIdAsync(id);
             feedbackToDelete.DeletedAt = DateTime.UtcNow;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return feedbackToDelete;
         }
 

@@ -17,34 +17,34 @@ namespace SoundSphere.Test.Unit.Controllers
 
         public SongControllerTest() => _songController = new(_songServiceMock.Object);
 
-        [Fact] public void GetAll_Test()
+        [Fact] public async Task GetAll_Test()
         {
-            _songServiceMock.Setup(mock => mock.GetAll(_songPayload)).Returns(_songDtosPagination);
-            OkObjectResult? result = _songController.GetAll(_songPayload) as OkObjectResult;
+            _songServiceMock.Setup(mock => mock.GetAllAsync(_songPayload)).ReturnsAsync(_songDtosPagination);
+            OkObjectResult? result = await _songController.GetAllAsync(_songPayload) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(_songDtosPagination);
         }
 
-        [Fact] public void GetById_Test()
+        [Fact] public async Task GetById_Test()
         {
-            _songServiceMock.Setup(mock => mock.GetById(ValidSongId)).Returns(_songDtos[0]);
-            OkObjectResult? result = _songController.GetById(ValidSongId) as OkObjectResult;
+            _songServiceMock.Setup(mock => mock.GetByIdAsync(ValidSongId)).ReturnsAsync(_songDtos[0]);
+            OkObjectResult? result = await _songController.GetByIdAsync(ValidSongId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(_songDtos[0]);
         }
 
-        [Fact] public void Add_Test()
+        [Fact] public async Task Add_Test()
         {
-            _songServiceMock.Setup(mock => mock.Add(It.IsAny<SongDto>())).Returns(_newSongDto);
-            CreatedResult? result = _songController.Add(_newSongDto) as CreatedResult;
+            _songServiceMock.Setup(mock => mock.AddAsync(It.IsAny<SongDto>())).ReturnsAsync(_newSongDto);
+            CreatedResult? result = await _songController.AddAsync(_newSongDto) as CreatedResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status201Created);
             result?.Value.Should().BeEquivalentTo(_newSongDto);
         }
 
-        [Fact] public void UpdateById_Test()
+        [Fact] public async Task UpdateById_Test()
         {
             SongDto updatedSongDto = _songDtos[0];
             updatedSongDto.Title = _songDtos[1].Title;
@@ -55,19 +55,19 @@ namespace SoundSphere.Test.Unit.Controllers
             updatedSongDto.AlbumId = _songDtos[1].AlbumId;
             updatedSongDto.ArtistsIds = _songDtos[1].ArtistsIds;
             updatedSongDto.SimilarSongsIds = _songDtos[1].SimilarSongsIds;
-            _songServiceMock.Setup(mock => mock.UpdateById(It.IsAny<SongDto>(), ValidSongId)).Returns(updatedSongDto);
-            OkObjectResult? result = _songController.UpdateById(_songDtos[1], ValidSongId) as OkObjectResult;
+            _songServiceMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<SongDto>(), ValidSongId)).ReturnsAsync(updatedSongDto);
+            OkObjectResult? result = await _songController.UpdateByIdAsync(_songDtos[1], ValidSongId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(updatedSongDto);
         }
 
-        [Fact] public void DeleteById_Test()
+        [Fact] public async Task DeleteById_Test()
         {
             SongDto deletedSongDto = _songDtos[0];
             deletedSongDto.DeletedAt = DateTime.UtcNow;
-            _songServiceMock.Setup(mock => mock.DeleteById(ValidSongId)).Returns(deletedSongDto);
-            OkObjectResult? result = _songController.DeleteById(ValidSongId) as OkObjectResult;
+            _songServiceMock.Setup(mock => mock.DeleteByIdAsync(ValidSongId)).ReturnsAsync(deletedSongDto);
+            OkObjectResult? result = await _songController.DeleteByIdAsync(ValidSongId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(deletedSongDto);

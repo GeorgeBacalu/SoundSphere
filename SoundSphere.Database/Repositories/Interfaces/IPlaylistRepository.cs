@@ -5,15 +5,15 @@ namespace SoundSphere.Database.Repositories.Interfaces
 {
     public interface IPlaylistRepository
     {
-        List<Playlist> GetAll(PlaylistPaginationRequest payload);
+        Task<List<Playlist>> GetAllAsync(PlaylistPaginationRequest payload);
 
-        Playlist GetById(Guid id);
+        Task<Playlist> GetByIdAsync(Guid id);
 
-        Playlist Add(Playlist playlist);
+        Task<Playlist> AddAsync(Playlist playlist);
 
-        Playlist UpdateById(Playlist playlist, Guid id);
+        Task<Playlist> UpdateByIdAsync(Playlist playlist, Guid id);
 
-        Playlist DeleteById(Guid id);
+        Task<Playlist> DeleteByIdAsync(Guid id);
 
         void LinkPlaylistToUser(Playlist playlist);
     }

@@ -12,7 +12,7 @@ namespace SoundSphere.Test.Integration
 
         public AppDbContext CreateContext() => new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlServer(_configuration.GetConnectionString("DefaultConnection")).Options);
 
-        public void TrackAndAddEntities<T>(AppDbContext context, List<T> entities) where T : class
+        public async Task TrackAndAddAsync<T>(AppDbContext context, List<T> entities) where T : class
         {
             entities.ForEach(entity =>
             {
@@ -22,8 +22,8 @@ namespace SoundSphere.Test.Integration
                     context.Entry(entity).State = EntityState.Unchanged;
                     context.Set<T>().Add(entity);
                 }
-                context.SaveChanges();
             });
+            await context.SaveChangesAsync();
         }
     }
 }

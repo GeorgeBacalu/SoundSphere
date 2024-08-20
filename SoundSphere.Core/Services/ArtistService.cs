@@ -15,20 +15,20 @@ namespace SoundSphere.Core.Services
 
         public ArtistService(IArtistRepository artistRepository, IMapper mapper) => (_artistRepository, _mapper) = (artistRepository, mapper);
 
-        public List<ArtistDto> GetAll(ArtistPaginationRequest payload) => _artistRepository.GetAll(payload).ToDtos(_mapper);
+        public async Task<List<ArtistDto>> GetAllAsync(ArtistPaginationRequest payload) => (await _artistRepository.GetAllAsync(payload)).ToDtos(_mapper);
 
-        public ArtistDto GetById(Guid id) => _artistRepository.GetById(id).ToDto(_mapper);
+        public async Task<ArtistDto> GetByIdAsync(Guid id) => (await _artistRepository.GetByIdAsync(id)).ToDto(_mapper);
 
-        public ArtistDto Add(ArtistDto artistDto)
+        public async Task<ArtistDto> AddAsync(ArtistDto artistDto)
         {
             Artist artist = artistDto.ToEntity(_mapper);
             _artistRepository.AddArtistPair(artist);
             _artistRepository.AddUserArtist(artist);
-            return _artistRepository.Add(artist).ToDto(_mapper);
+            return (await _artistRepository.AddAsync(artist)).ToDto(_mapper);
         }
 
-        public ArtistDto UpdateById(ArtistDto artistDto, Guid id) => _artistRepository.UpdateById(artistDto.ToEntity(_mapper), id).ToDto(_mapper);
+        public async Task<ArtistDto> UpdateByIdAsync(ArtistDto artistDto, Guid id) => (await _artistRepository.UpdateByIdAsync(artistDto.ToEntity(_mapper), id)).ToDto(_mapper);
 
-        public ArtistDto DeleteById(Guid id) => _artistRepository.DeleteById(id).ToDto(_mapper);
+        public async Task<ArtistDto> DeleteByIdAsync(Guid id) => (await _artistRepository.DeleteByIdAsync(id)).ToDto(_mapper);
     }
 }

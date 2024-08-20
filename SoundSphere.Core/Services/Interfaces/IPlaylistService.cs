@@ -5,14 +5,14 @@ namespace SoundSphere.Core.Services.Interfaces
 {
     public interface IPlaylistService
     {
-        List<PlaylistDto> GetAll(PlaylistPaginationRequest payload);
+        Task<List<PlaylistDto>> GetAllAsync(PlaylistPaginationRequest payload);
 
-        PlaylistDto GetById(Guid id);
+        Task<PlaylistDto> GetByIdAsync(Guid id);
 
-        PlaylistDto Add(PlaylistDto playlistDto);
+        Task<PlaylistDto> AddAsync(PlaylistDto playlistDto);
 
-        PlaylistDto UpdateById(PlaylistDto playlistDto, Guid id);
+        Task<PlaylistDto> UpdateByIdAsync(PlaylistDto playlistDto, Guid id);
 
-        PlaylistDto DeleteById(Guid id);
+        Task<PlaylistDto> DeleteByIdAsync(Guid id);
     }
 }

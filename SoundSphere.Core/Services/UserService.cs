@@ -15,20 +15,20 @@ namespace SoundSphere.Core.Services
 
         public UserService(IUserRepository userRepository, IMapper mapper) => (_userRepository, _mapper) = (userRepository, mapper);
 
-        public List<UserDto> GetAll(UserPaginationRequest payload) => _userRepository.GetAll(payload).ToDtos(_mapper);
+        public async Task<List<UserDto>> GetAllAsync(UserPaginationRequest payload) => (await _userRepository.GetAllAsync(payload)).ToDtos(_mapper);
 
-        public UserDto GetById(Guid id) => _userRepository.GetById(id).ToDto(_mapper);
+        public async Task<UserDto> GetByIdAsync(Guid id) => (await _userRepository.GetByIdAsync(id)).ToDto(_mapper);
 
-        public UserDto Add(UserDto userDto)
+        public async Task<UserDto> AddAsync(UserDto userDto)
         {
             User user = userDto.ToEntity(_mapper);
             _userRepository.AddUserArtist(user);
             _userRepository.AddUserSong(user);
-            return _userRepository.Add(user).ToDto(_mapper);
+            return (await _userRepository.AddAsync(user)).ToDto(_mapper);
         }
 
-        public UserDto UpdateById(UserDto userDto, Guid id) => _userRepository.UpdateById(userDto.ToEntity(_mapper), id).ToDto(_mapper);
+        public async Task<UserDto> UpdateByIdAsync(UserDto userDto, Guid id) => (await _userRepository.UpdateByIdAsync(userDto.ToEntity(_mapper), id)).ToDto(_mapper);
 
-        public UserDto DeleteById(Guid id) => _userRepository.DeleteById(id).ToDto(_mapper);
+        public async Task<UserDto> DeleteByIdAsync(Guid id) => (await _userRepository.DeleteByIdAsync(id)).ToDto(_mapper);
     }
 }

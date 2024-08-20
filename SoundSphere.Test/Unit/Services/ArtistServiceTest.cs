@@ -25,35 +25,35 @@ namespace SoundSphere.Test.Unit.Services
             _artistService = new ArtistService(_artistRepositoryMock.Object, _mapper);
         }
 
-        [Fact] public void GetAll_Test()
+        [Fact] public async Task GetAll_Test()
         {
-            _artistRepositoryMock.Setup(mock => mock.GetAll(_artistPayload)).Returns(_artistsPagination);
-            _artistService.GetAll(_artistPayload).Should().BeEquivalentTo(_artistDtosPagination);
+            _artistRepositoryMock.Setup(mock => mock.GetAllAsync(_artistPayload)).ReturnsAsync(_artistsPagination);
+            (await _artistService.GetAllAsync(_artistPayload)).Should().BeEquivalentTo(_artistDtosPagination);
         }
 
-        [Fact] public void GetById_ValidId_Test()
+        [Fact] public async Task GetById_ValidId_Test()
         {
-            _artistRepositoryMock.Setup(mock => mock.GetById(ValidArtistId)).Returns(_artists[0]);
-            _artistService.GetById(ValidArtistId).Should().BeEquivalentTo(_artistDtos[0]);
+            _artistRepositoryMock.Setup(mock => mock.GetByIdAsync(ValidArtistId)).ReturnsAsync(_artists[0]);
+            (await _artistService.GetByIdAsync(ValidArtistId)).Should().BeEquivalentTo(_artistDtos[0]);
         }
 
-        [Fact] public void GetById_InvalidId_Test()
+        [Fact] public async Task GetById_InvalidId_Test()
         {
-            _artistRepositoryMock.Setup(mock => mock.GetById(InvalidId)).Throws(new ResourceNotFoundException(string.Format(ArtistNotFound, InvalidId)));
-            _artistService.Invoking(service => service.GetById(InvalidId))
-                .Should().Throw<ResourceNotFoundException>()
+            _artistRepositoryMock.Setup(mock => mock.GetByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(ArtistNotFound, InvalidId)));
+            await _artistService.Invoking(service => service.GetByIdAsync(InvalidId))
+                .Should().ThrowAsync<ResourceNotFoundException>()
                 .WithMessage(string.Format(ArtistNotFound, InvalidId));
-            _artistRepositoryMock.Verify(mock => mock.GetById(InvalidId));
+            _artistRepositoryMock.Verify(mock => mock.GetByIdAsync(InvalidId));
         }
 
-        [Fact] public void Add_Test()
+        [Fact] public async Task Add_Test()
         {
-            _artistRepositoryMock.Setup(mock => mock.Add(It.IsAny<Artist>())).Returns(_newArtist);
-            _artistService.Add(_newArtistDto).Should().BeEquivalentTo(_newArtistDto, options => options.Excluding(artist => artist.Id).Excluding(artist => artist.CreatedAt).Excluding(artist => artist.UpdatedAt));
-            _artistRepositoryMock.Verify(mock => mock.Add(It.IsAny<Artist>()));
+            _artistRepositoryMock.Setup(mock => mock.AddAsync(It.IsAny<Artist>())).ReturnsAsync(_newArtist);
+            (await _artistService.AddAsync(_newArtistDto)).Should().BeEquivalentTo(_newArtistDto, options => options.Excluding(artist => artist.Id).Excluding(artist => artist.CreatedAt).Excluding(artist => artist.UpdatedAt));
+            _artistRepositoryMock.Verify(mock => mock.AddAsync(It.IsAny<Artist>()));
         }
 
-        [Fact] public void UpdateById_ValidId_Test()
+        [Fact] public async Task UpdateById_ValidId_Test()
         {
             Artist updatedArtist = _artists[0];
             updatedArtist.Name = _artists[1].Name;
@@ -61,37 +61,37 @@ namespace SoundSphere.Test.Unit.Services
             updatedArtist.Bio = _artists[1].Bio;
             updatedArtist.SimilarArtists = _artists[1].SimilarArtists;
             ArtistDto updatedArtistDto = updatedArtist.ToDto(_mapper);
-            _artistRepositoryMock.Setup(mock => mock.UpdateById(It.IsAny<Artist>(), ValidArtistId)).Returns(updatedArtist);
-            _artistService.UpdateById(_artistDtos[1], ValidArtistId).Should().BeEquivalentTo(updatedArtistDto);
-            _artistRepositoryMock.Verify(mock => mock.UpdateById(It.IsAny<Artist>(), ValidArtistId));
+            _artistRepositoryMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<Artist>(), ValidArtistId)).ReturnsAsync(updatedArtist);
+            (await _artistService.UpdateByIdAsync(_artistDtos[1], ValidArtistId)).Should().BeEquivalentTo(updatedArtistDto);
+            _artistRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Artist>(), ValidArtistId));
         }
 
-        [Fact] public void UpdateById_InvalidId_Test()
+        [Fact] public async Task UpdateById_InvalidId_Test()
         {
-            _artistRepositoryMock.Setup(mock => mock.UpdateById(It.IsAny<Artist>(), InvalidId)).Throws(new ResourceNotFoundException(string.Format(ArtistNotFound, InvalidId)));
-            _artistService.Invoking(service => service.UpdateById(_artistDtos[1], InvalidId))
-                .Should().Throw<ResourceNotFoundException>()
+            _artistRepositoryMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<Artist>(), InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(ArtistNotFound, InvalidId)));
+            await _artistService.Invoking(service => service.UpdateByIdAsync(_artistDtos[1], InvalidId))
+                .Should().ThrowAsync<ResourceNotFoundException>()
                 .WithMessage(string.Format(ArtistNotFound, InvalidId));
-            _artistRepositoryMock.Verify(mock => mock.UpdateById(It.IsAny<Artist>(), InvalidId));
+            _artistRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Artist>(), InvalidId));
         }
 
-        [Fact] public void DeleteById_ValidId_Test()
+        [Fact] public async Task DeleteById_ValidId_Test()
         {
             Artist deletedArtist = _artists[0];
             deletedArtist.DeletedAt = DateTime.UtcNow;
             ArtistDto deletedArtistDto = deletedArtist.ToDto(_mapper);
-            _artistRepositoryMock.Setup(mock => mock.DeleteById(ValidArtistId)).Returns(deletedArtist);
-            _artistService.DeleteById(ValidArtistId).Should().BeEquivalentTo(deletedArtistDto);
-            _artistRepositoryMock.Verify(mock => mock.DeleteById(ValidArtistId));
+            _artistRepositoryMock.Setup(mock => mock.DeleteByIdAsync(ValidArtistId)).ReturnsAsync(deletedArtist);
+            (await _artistService.DeleteByIdAsync(ValidArtistId)).Should().BeEquivalentTo(deletedArtistDto);
+            _artistRepositoryMock.Verify(mock => mock.DeleteByIdAsync(ValidArtistId));
         }
 
-        [Fact] public void DeleteById_InvalidId_Test()
+        [Fact] public async Task DeleteById_InvalidId_Test()
         {
-            _artistRepositoryMock.Setup(mock => mock.DeleteById(InvalidId)).Throws(new ResourceNotFoundException(string.Format(ArtistNotFound, InvalidId)));
-            _artistService.Invoking(service => service.DeleteById(InvalidId))
-                .Should().Throw<ResourceNotFoundException>()
+            _artistRepositoryMock.Setup(mock => mock.DeleteByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(ArtistNotFound, InvalidId)));
+            await _artistService.Invoking(service => service.DeleteByIdAsync(InvalidId))
+                .Should().ThrowAsync<ResourceNotFoundException>()
                 .WithMessage(string.Format(ArtistNotFound, InvalidId));
-            _artistRepositoryMock.Verify(mock => mock.DeleteById(InvalidId));
+            _artistRepositoryMock.Verify(mock => mock.DeleteByIdAsync(InvalidId));
         }
     }
 }

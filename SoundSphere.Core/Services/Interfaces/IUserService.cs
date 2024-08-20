@@ -5,14 +5,14 @@ namespace SoundSphere.Core.Services.Interfaces
 {
     public interface IUserService
     {
-        List<UserDto> GetAll(UserPaginationRequest payload);
+        Task<List<UserDto>> GetAllAsync(UserPaginationRequest payload);
 
-        UserDto GetById(Guid id);
+        Task<UserDto> GetByIdAsync(Guid id);
 
-        UserDto Add(UserDto userDto);
+        Task<UserDto> AddAsync(UserDto userDto);
 
-        UserDto UpdateById(UserDto userDto, Guid id);
+        Task<UserDto> UpdateByIdAsync(UserDto userDto, Guid id);
 
-        UserDto DeleteById(Guid id);
+        Task<UserDto> DeleteByIdAsync(Guid id);
     }
 }

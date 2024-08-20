@@ -15,19 +15,19 @@ namespace SoundSphere.Core.Services
 
         public AlbumService(IAlbumRepository albumRepository, IMapper mapper) => (_albumRepository, _mapper) = (albumRepository, mapper);
 
-        public List<AlbumDto> GetAll(AlbumPaginationRequest payload) => _albumRepository.GetAll(payload).ToDtos(_mapper);
+        public async Task<List<AlbumDto>> GetAllAsync(AlbumPaginationRequest payload) => (await _albumRepository.GetAllAsync(payload)).ToDtos(_mapper);
 
-        public AlbumDto GetById(Guid id) => _albumRepository.GetById(id).ToDto(_mapper);
+        public async Task<AlbumDto> GetByIdAsync(Guid id) => (await _albumRepository.GetByIdAsync(id)).ToDto(_mapper);
 
-        public AlbumDto Add(AlbumDto albumDto)
+        public async Task<AlbumDto> AddAsync(AlbumDto albumDto)
         {
             Album album = albumDto.ToEntity(_mapper);
             _albumRepository.AddAlbumPair(album);
-            return _albumRepository.Add(album).ToDto(_mapper);
+            return (await _albumRepository.AddAsync(album)).ToDto(_mapper);
         }
 
-        public AlbumDto UpdateById(AlbumDto albumDto, Guid id) => _albumRepository.UpdateById(albumDto.ToEntity(_mapper), id).ToDto(_mapper);
+        public async Task<AlbumDto> UpdateByIdAsync(AlbumDto albumDto, Guid id) => (await _albumRepository.UpdateByIdAsync(albumDto.ToEntity(_mapper), id)).ToDto(_mapper);
 
-        public AlbumDto DeleteById(Guid id) => _albumRepository.DeleteById(id).ToDto(_mapper);
+        public async Task<AlbumDto> DeleteByIdAsync(Guid id) => (await _albumRepository.DeleteByIdAsync(id)).ToDto(_mapper);
     }
 }

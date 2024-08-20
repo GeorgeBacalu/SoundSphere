@@ -5,15 +5,15 @@ namespace SoundSphere.Database.Repositories.Interfaces
 {
     public interface IUserRepository
     {
-        List<User> GetAll(UserPaginationRequest payload);
+        Task<List<User>> GetAllAsync(UserPaginationRequest payload);
 
-        User GetById(Guid id);
+        Task<User> GetByIdAsync(Guid id);
 
-        User Add(User user);
+        Task<User> AddAsync(User user);
 
-        User UpdateById(User user, Guid id);
+        Task<User> UpdateByIdAsync(User user, Guid id);
 
-        User DeleteById(Guid id);
+        Task<User> DeleteByIdAsync(Guid id);
 
         void AddUserArtist(User user);
 

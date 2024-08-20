@@ -18,19 +18,19 @@ namespace SoundSphere.Core.Services
         public PlaylistService(IPlaylistRepository playlistRepository, IUserRepository userRepository, ISongRepository songRepository, IMapper mapper) =>
             (_playlistRepository, _userRepository, _songRepository, _mapper) = (playlistRepository, userRepository, songRepository, mapper);
 
-        public List<PlaylistDto> GetAll(PlaylistPaginationRequest payload) => _playlistRepository.GetAll(payload).ToDtos(_mapper);
+        public async Task<List<PlaylistDto>> GetAllAsync(PlaylistPaginationRequest payload) => (await _playlistRepository.GetAllAsync(payload)).ToDtos(_mapper);
 
-        public PlaylistDto GetById(Guid id) => _playlistRepository.GetById(id).ToDto(_mapper);
+        public async Task<PlaylistDto> GetByIdAsync(Guid id) => (await _playlistRepository.GetByIdAsync(id)).ToDto(_mapper);
 
-        public PlaylistDto Add(PlaylistDto playlistDto)
+        public async Task<PlaylistDto> AddAsync(PlaylistDto playlistDto)
         {
-            Playlist playlist = playlistDto.ToEntity(_userRepository, _songRepository, _mapper);
+            Playlist playlist = await playlistDto.ToEntityAsync(_userRepository, _songRepository, _mapper);
             _playlistRepository.LinkPlaylistToUser(playlist);
-            return _playlistRepository.Add(playlist).ToDto(_mapper);
+            return (await _playlistRepository.AddAsync(playlist)).ToDto(_mapper);
         }
 
-        public PlaylistDto UpdateById(PlaylistDto playlistDto, Guid id) => _playlistRepository.UpdateById(playlistDto.ToEntity(_userRepository, _songRepository, _mapper), id).ToDto(_mapper);
+        public async Task<PlaylistDto> UpdateByIdAsync(PlaylistDto playlistDto, Guid id) => (await _playlistRepository.UpdateByIdAsync(await playlistDto.ToEntityAsync(_userRepository, _songRepository, _mapper), id)).ToDto(_mapper);
 
-        public PlaylistDto DeleteById(Guid id) => _playlistRepository.DeleteById(id).ToDto(_mapper);
+        public async Task<PlaylistDto> DeleteByIdAsync(Guid id) => (await _playlistRepository.DeleteByIdAsync(id)).ToDto(_mapper);
     }
 }

@@ -5,15 +5,15 @@ namespace SoundSphere.Database.Repositories.Interfaces
 {
     public interface IArtistRepository
     {
-        List<Artist> GetAll(ArtistPaginationRequest payload);
+        Task<List<Artist>> GetAllAsync(ArtistPaginationRequest payload);
 
-        Artist GetById(Guid id);
+        Task<Artist> GetByIdAsync(Guid id);
 
-        Artist Add(Artist artist);
+        Task<Artist> AddAsync(Artist artist);
 
-        Artist UpdateById(Artist artist, Guid id);
+        Task<Artist> UpdateByIdAsync(Artist artist, Guid id);
 
-        Artist DeleteById(Guid id);
+        Task<Artist> DeleteByIdAsync(Guid id);
 
         void AddArtistPair(Artist artist);
 

@@ -5,15 +5,15 @@ namespace SoundSphere.Database.Repositories.Interfaces
 {
     public interface INotificationRepository
     {
-        List<Notification> GetAll(NotificationPaginationRequest payload);
+        Task<List<Notification>> GetAllAsync(NotificationPaginationRequest payload);
 
-        Notification GetById(Guid id);
+        Task<Notification> GetByIdAsync(Guid id);
 
-        Notification Add(Notification notification);
+        Task<Notification> AddAsync(Notification notification);
 
-        Notification UpdateById(Notification notification, Guid id);
+        Task<Notification> UpdateByIdAsync(Notification notification, Guid id);
 
-        Notification DeleteById(Guid id);
+        Task<Notification> DeleteByIdAsync(Guid id);
 
         void LinkNotificationToSender(Notification notification);
 

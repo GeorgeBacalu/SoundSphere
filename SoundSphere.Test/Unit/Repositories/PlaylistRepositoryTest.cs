@@ -19,63 +19,63 @@ namespace SoundSphere.Test.Unit.Repositories
 
         public PlaylistRepositoryTest()
         {
-            IQueryable<Playlist> queryablePlaylists = _playlists.AsQueryable();
-            _dbSetMock.As<IQueryable<Playlist>>().Setup(mock => mock.Provider).Returns(queryablePlaylists.Provider);
-            _dbSetMock.As<IQueryable<Playlist>>().Setup(mock => mock.Expression).Returns(queryablePlaylists.Expression);
-            _dbSetMock.As<IQueryable<Playlist>>().Setup(mock => mock.ElementType).Returns(queryablePlaylists.ElementType);
-            _dbSetMock.As<IQueryable<Playlist>>().Setup(mock => mock.GetEnumerator()).Returns(queryablePlaylists.GetEnumerator());
+            var asyncQueryablePlaylists = (IQueryable<Playlist>)new AsyncQueryable<Playlist>(_playlists);
+            _dbSetMock.As<IQueryable<Playlist>>().Setup(mock => mock.Provider).Returns(asyncQueryablePlaylists.Provider);
+            _dbSetMock.As<IQueryable<Playlist>>().Setup(mock => mock.Expression).Returns(asyncQueryablePlaylists.Expression);
+            _dbSetMock.As<IQueryable<Playlist>>().Setup(mock => mock.ElementType).Returns(asyncQueryablePlaylists.ElementType);
+            _dbSetMock.As<IQueryable<Playlist>>().Setup(mock => mock.GetEnumerator()).Returns(asyncQueryablePlaylists.GetEnumerator());
             _dbContextMock.Setup(mock => mock.Playlists).Returns(_dbSetMock.Object);
             _playlistRepository = new PlaylistRepository(_dbContextMock.Object);
         }
 
-        [Fact] public void GetAll_Test() => _playlistRepository.GetAll(_playlistPayload).Should().BeEquivalentTo(_playlistsPagination);
+        [Fact] public async Task GetAll_Test() => (await _playlistRepository.GetAllAsync(_playlistPayload)).Should().BeEquivalentTo(_playlistsPagination);
 
-        [Fact] public void GetById_ValidId_Test() => _playlistRepository.GetById(ValidPlaylistId).Should().BeEquivalentTo(_playlists[0]);
+        [Fact] public async Task GetById_ValidId_Test() => (await _playlistRepository.GetByIdAsync(ValidPlaylistId)).Should().BeEquivalentTo(_playlists[0]);
 
-        [Fact] public void GetById_InvalidId_Test() => _playlistRepository
-            .Invoking(repository => repository.GetById(InvalidId))
-            .Should().Throw<ResourceNotFoundException>()
+        [Fact] public async Task GetById_InvalidId_Test() => await _playlistRepository
+            .Invoking(repository => repository.GetByIdAsync(InvalidId))
+            .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(PlaylistNotFound, InvalidId));
 
-        [Fact] public void Add_Test()
+        [Fact] public async Task Add_Test()
         {
-            Playlist result = _playlistRepository.Add(_newPlaylist);
+            Playlist result = await _playlistRepository.AddAsync(_newPlaylist);
             result.Should().BeEquivalentTo(_newPlaylist, options => options.Excluding(playlist => playlist.Id).Excluding(playlist => playlist.CreatedAt).Excluding(playlist => playlist.UpdatedAt));
             result.Id.Should().NotBe(Guid.Empty);
             result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-            _dbContextMock.Verify(mock => mock.SaveChanges());
+            _dbContextMock.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()));
         }
 
-        [Fact] public void UpdateById_ValidId_Test()
+        [Fact] public async Task UpdateById_ValidId_Test()
         {
             Mock<CustomEntityEntry<Playlist>> entryMock = new();
             entryMock.SetupProperty(mock => mock.State, EntityState.Modified);
             _dbContextMock.Setup(mock => mock.Entry(It.IsAny<Playlist>())).Returns(entryMock.Object);
             Playlist updatedPlaylist = _playlists[0];
             updatedPlaylist.Title = _playlists[1].Title;
-            Playlist result = _playlistRepository.UpdateById(_playlists[1], ValidPlaylistId);
+            Playlist result = await _playlistRepository.UpdateByIdAsync(_playlists[1], ValidPlaylistId);
             result.Should().BeEquivalentTo(updatedPlaylist, options => options.Excluding(playlist => playlist.UpdatedAt));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-            _dbContextMock.Verify(mock => mock.SaveChanges());
+            _dbContextMock.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()));
         }
 
-        [Fact] public void UpdateById_InvalidId_Test() => _playlistRepository
-            .Invoking(repository => repository.UpdateById(_playlists[1], InvalidId))
-            .Should().Throw<ResourceNotFoundException>()
+        [Fact] public async Task UpdateById_InvalidId_Test() => await _playlistRepository
+            .Invoking(repository => repository.UpdateByIdAsync(_playlists[1], InvalidId))
+            .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(PlaylistNotFound, InvalidId));
 
-        [Fact] public void DeleteById_ValidId_Test()
+        [Fact] public async Task DeleteById_ValidId_Test()
         {
-            Playlist result = _playlistRepository.DeleteById(ValidPlaylistId);
+            Playlist result = await _playlistRepository.DeleteByIdAsync(ValidPlaylistId);
             result.Should().BeEquivalentTo(_playlists[0], options => options.Excluding(playlist => playlist.DeletedAt));
             result.DeletedAt.Should().NotBe(null);
-            _dbContextMock.Verify(mock => mock.SaveChanges());
+            _dbContextMock.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()));
         }
 
-        [Fact] public void DeleteById_InvalidId_Test() => _playlistRepository
-            .Invoking(repository => repository.DeleteById(InvalidId))
-            .Should().Throw<ResourceNotFoundException>()
+        [Fact] public async Task DeleteById_InvalidId_Test() => await _playlistRepository
+            .Invoking(repository => repository.DeleteByIdAsync(InvalidId))
+            .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(PlaylistNotFound, InvalidId));
     }
 }

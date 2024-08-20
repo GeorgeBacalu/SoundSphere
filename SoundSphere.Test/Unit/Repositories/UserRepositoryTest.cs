@@ -19,35 +19,35 @@ namespace SoundSphere.Test.Unit.Repositories
 
         public UserRepositoryTest()
         {
-            IQueryable<User> queryableUsers = _users.AsQueryable();
-            _dbSetMock.As<IQueryable<User>>().Setup(mock => mock.Provider).Returns(queryableUsers.Provider);
-            _dbSetMock.As<IQueryable<User>>().Setup(mock => mock.Expression).Returns(queryableUsers.Expression);
-            _dbSetMock.As<IQueryable<User>>().Setup(mock => mock.ElementType).Returns(queryableUsers.ElementType);
-            _dbSetMock.As<IQueryable<User>>().Setup(mock => mock.GetEnumerator()).Returns(queryableUsers.GetEnumerator());
+            var asyncQueryableUsers = (IQueryable<User>)new AsyncQueryable<User>(_users);
+            _dbSetMock.As<IQueryable<User>>().Setup(mock => mock.Provider).Returns(asyncQueryableUsers.Provider);
+            _dbSetMock.As<IQueryable<User>>().Setup(mock => mock.Expression).Returns(asyncQueryableUsers.Expression);
+            _dbSetMock.As<IQueryable<User>>().Setup(mock => mock.ElementType).Returns(asyncQueryableUsers.ElementType);
+            _dbSetMock.As<IQueryable<User>>().Setup(mock => mock.GetEnumerator()).Returns(asyncQueryableUsers.GetEnumerator());
             _dbContextMock.Setup(mock => mock.Users).Returns(_dbSetMock.Object);
             _userRepository = new UserRepository(_dbContextMock.Object);
         }
 
-        [Fact] public void GetAll_Test() => _userRepository.GetAll(_userPayload).Should().BeEquivalentTo(_usersPagination);
+        [Fact] public async Task GetAll_Test() => (await _userRepository.GetAllAsync(_userPayload)).Should().BeEquivalentTo(_usersPagination);
 
-        [Fact] public void GetById_ValidId_Test() => _userRepository.GetById(ValidUserId).Should().BeEquivalentTo(_users[0]);
+        [Fact] public async Task GetById_ValidId_Test() => (await _userRepository.GetByIdAsync(ValidUserId)).Should().BeEquivalentTo(_users[0]);
 
-        [Fact] public void GetById_InvalidId_Test() => _userRepository
-            .Invoking(repository => repository.GetById(InvalidId))
-            .Should().Throw<ResourceNotFoundException>()
+        [Fact] public async Task GetById_InvalidId_Test() => await _userRepository
+            .Invoking(repository => repository.GetByIdAsync(InvalidId))
+            .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(UserNotFound, InvalidId));
 
-        [Fact] public void Add_Test()
+        [Fact] public async Task Add_Test()
         {
-            User result = _userRepository.Add(_newUser);
+            User result = await _userRepository.AddAsync(_newUser);
             result.Should().BeEquivalentTo(_newUser, options => options.Excluding(user => user.Id).Excluding(user => user.CreatedAt).Excluding(user => user.UpdatedAt));
             result.Id.Should().NotBe(Guid.Empty);
             result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-            _dbContextMock.Verify(mock => mock.SaveChanges());
+            _dbContextMock.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()));
         }
 
-        [Fact] public void UpdateById_ValidId_Test()
+        [Fact] public async Task UpdateById_ValidId_Test()
         {
             Mock<CustomEntityEntry<User>> entryMock = new();
             entryMock.SetupProperty(mock => mock.State, EntityState.Modified);
@@ -60,28 +60,28 @@ namespace SoundSphere.Test.Unit.Repositories
             updatedUser.Birthday = _users[1].Birthday;
             updatedUser.ImageUrl = _users[1].ImageUrl;
             updatedUser.Role = _users[1].Role;
-            User result = _userRepository.UpdateById(_users[1], ValidUserId);
+            User result = await _userRepository.UpdateByIdAsync(_users[1], ValidUserId);
             result.Should().BeEquivalentTo(updatedUser, options => options.Excluding(user => user.UpdatedAt));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-            _dbContextMock.Verify(mock => mock.SaveChanges());
+            _dbContextMock.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()));
         }
 
-        [Fact] public void UpdateById_InvalidId_Test() => _userRepository
-            .Invoking(repository => repository.UpdateById(_users[1], InvalidId))
-            .Should().Throw<ResourceNotFoundException>()
+        [Fact] public async Task UpdateById_InvalidId_Test() => await _userRepository
+            .Invoking(repository => repository.UpdateByIdAsync(_users[1], InvalidId))
+            .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(UserNotFound, InvalidId));
 
-        [Fact] public void DeleteById_ValidId_Test()
+        [Fact] public async Task DeleteById_ValidId_Test()
         {
-            User result = _userRepository.DeleteById(ValidUserId);
+            User result = await _userRepository.DeleteByIdAsync(ValidUserId);
             result.Should().BeEquivalentTo(_users[0], options => options.Excluding(user => user.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-            _dbContextMock.Verify(mock => mock.SaveChanges());
+            _dbContextMock.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()));
         }
 
-        [Fact] public void DeleteById_InvalidId_Test() => _userRepository
-            .Invoking(repository => repository.DeleteById(InvalidId))
-            .Should().Throw<ResourceNotFoundException>()
+        [Fact] public async Task DeleteById_InvalidId_Test() => await _userRepository
+            .Invoking(repository => repository.DeleteByIdAsync(InvalidId))
+            .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(UserNotFound, InvalidId));
     }
 }

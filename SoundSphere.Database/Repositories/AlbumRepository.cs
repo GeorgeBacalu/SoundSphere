@@ -15,43 +15,43 @@ namespace SoundSphere.Database.Repositories
 
         public AlbumRepository(AppDbContext context) => _context = context;
 
-        public List<Album> GetAll(AlbumPaginationRequest payload) => _context.Albums
+        public async Task<List<Album>> GetAllAsync(AlbumPaginationRequest payload) => await _context.Albums
             .Include(album => album.SimilarAlbums)
             .Where(album => album.DeletedAt == null)
             .ApplyPagination(payload)
-            .ToList();
+            .ToListAsync();
 
-        public Album GetById(Guid id) => _context.Albums
+        public async Task<Album> GetByIdAsync(Guid id) => await _context.Albums
             .Include(album => album.SimilarAlbums)
             .Where(album => album.DeletedAt == null)
-            .SingleOrDefault(album => album.Id == id)
+            .SingleOrDefaultAsync(album => album.Id == id)
             ?? throw new ResourceNotFoundException(string.Format(AlbumNotFound, id));
 
-        public Album Add(Album album)
+        public async Task<Album> AddAsync(Album album)
         {
             _context.Albums.Add(album);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return album;
         }
 
-        public Album UpdateById(Album album, Guid id)
+        public async Task<Album> UpdateByIdAsync(Album album, Guid id)
         {
-            Album albumToUpdate = GetById(id);
+            Album albumToUpdate = await GetByIdAsync(id);
             albumToUpdate.Title = album.Title;
             albumToUpdate.ImageUrl = album.ImageUrl;
             albumToUpdate.ReleaseDate = album.ReleaseDate;
             albumToUpdate.SimilarAlbums = album.SimilarAlbums;
             if (_context.Entry(albumToUpdate).State == EntityState.Modified)
                 albumToUpdate.UpdatedAt = DateTime.UtcNow;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return albumToUpdate;
         }
 
-        public Album DeleteById(Guid id)
+        public async Task<Album> DeleteByIdAsync(Guid id)
         {
-            Album albumToDelete = GetById(id);
+            Album albumToDelete = await GetByIdAsync(id);
             albumToDelete.DeletedAt = DateTime.UtcNow;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return albumToDelete;
         }
 

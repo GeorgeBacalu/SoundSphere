@@ -17,34 +17,34 @@ namespace SoundSphere.Test.Unit.Controllers
 
         public UserControllerTest() => _userController = new(_userServiceMock.Object);
 
-        [Fact] public void GetAll_Test()
+        [Fact] public async Task GetAll_Test()
         {
-            _userServiceMock.Setup(mock => mock.GetAll(_userPayload)).Returns(_userDtosPagination);
-            OkObjectResult? result = _userController.GetAll(_userPayload) as OkObjectResult;
+            _userServiceMock.Setup(mock => mock.GetAllAsync(_userPayload)).ReturnsAsync(_userDtosPagination);
+            OkObjectResult? result = await _userController.GetAllAsync(_userPayload) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(_userDtosPagination);
         }
 
-        [Fact] public void GetById_Test()
+        [Fact] public async Task GetById_Test()
         {
-            _userServiceMock.Setup(mock => mock.GetById(ValidUserId)).Returns(_userDtos[0]);
-            OkObjectResult? result = _userController.GetById(ValidUserId) as OkObjectResult;
+            _userServiceMock.Setup(mock => mock.GetByIdAsync(ValidUserId)).ReturnsAsync(_userDtos[0]);
+            OkObjectResult? result = await _userController.GetByIdAsync(ValidUserId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(_userDtos[0]);
         }
 
-        [Fact] public void Add_Test()
+        [Fact] public async Task Add_Test()
         {
-            _userServiceMock.Setup(mock => mock.Add(It.IsAny<UserDto>())).Returns(_newUserDto);
-            CreatedResult? result = _userController.Add(_newUserDto) as CreatedResult;
+            _userServiceMock.Setup(mock => mock.AddAsync(It.IsAny<UserDto>())).ReturnsAsync(_newUserDto);
+            CreatedResult? result = await _userController.AddAsync(_newUserDto) as CreatedResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status201Created);
             result?.Value.Should().BeEquivalentTo(_newUserDto);
         }
 
-        [Fact] public void UpdateById_Test()
+        [Fact] public async Task UpdateById_Test()
         {
             UserDto updatedUserDto = _userDtos[0];
             updatedUserDto.Name = _userDtos[1].Name;
@@ -54,19 +54,19 @@ namespace SoundSphere.Test.Unit.Controllers
             updatedUserDto.Birthday = _userDtos[1].Birthday;
             updatedUserDto.ImageUrl = _userDtos[1].ImageUrl;
             updatedUserDto.Role = _userDtos[1].Role;
-            _userServiceMock.Setup(mock => mock.UpdateById(It.IsAny<UserDto>(), ValidUserId)).Returns(updatedUserDto);
-            OkObjectResult? result = _userController.UpdateById(_userDtos[1], ValidUserId) as OkObjectResult;
+            _userServiceMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<UserDto>(), ValidUserId)).ReturnsAsync(updatedUserDto);
+            OkObjectResult? result = await _userController.UpdateByIdAsync(_userDtos[1], ValidUserId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(updatedUserDto);
         }
 
-        [Fact] public void DeleteById_Test()
+        [Fact] public async Task DeleteById_Test()
         {
             UserDto deletedUserDto = _userDtos[0];
             deletedUserDto.DeletedAt = DateTime.UtcNow;
-            _userServiceMock.Setup(mock => mock.DeleteById(ValidUserId)).Returns(deletedUserDto);
-            OkObjectResult? result = _userController.DeleteById(ValidUserId) as OkObjectResult;
+            _userServiceMock.Setup(mock => mock.DeleteByIdAsync(ValidUserId)).ReturnsAsync(deletedUserDto);
+            OkObjectResult? result = await _userController.DeleteByIdAsync(ValidUserId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(deletedUserDto);

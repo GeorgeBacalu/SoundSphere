@@ -5,15 +5,15 @@ namespace SoundSphere.Database.Repositories.Interfaces
 {
     public interface IFeedbackRepository
     {
-        List<Feedback> GetAll(FeedbackPaginationRequest payload);
+        Task<List<Feedback>> GetAllAsync(FeedbackPaginationRequest payload);
 
-        Feedback GetById(Guid id);
+        Task<Feedback> GetByIdAsync(Guid id);
 
-        Feedback Add(Feedback feedback);
+        Task<Feedback> AddAsync(Feedback feedback);
 
-        Feedback UpdateById(Feedback feedback, Guid id);
+        Task<Feedback> UpdateByIdAsync(Feedback feedback, Guid id);
 
-        Feedback DeleteById(Guid id);
+        Task<Feedback> DeleteByIdAsync(Guid id);
 
         void LinkFeedbackToUser(Feedback feedback);
     }
