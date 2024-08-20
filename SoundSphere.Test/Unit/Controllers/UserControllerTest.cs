@@ -14,63 +14,59 @@ namespace SoundSphere.Test.Unit.Controllers
     {
         private readonly Mock<IUserService> _userServiceMock = new();
         private readonly UserController _userController;
-        private readonly UserDto _userDto1 = GetUserDto1();
-        private readonly UserDto _userDto2 = GetUserDto1();
-        private readonly UserDto _newUserDto = GetNewUserDto();
-        private readonly List<UserDto> _userDtos = GetUserDtos();
 
         public UserControllerTest() => _userController = new(_userServiceMock.Object);
 
-        [Fact] public void GetAll_Test()
+        [Fact] public async Task GetAll_Test()
         {
-            _userServiceMock.Setup(mock => mock.GetAll()).Returns(_userDtos);
-            OkObjectResult? result = _userController.GetAll() as OkObjectResult;
+            _userServiceMock.Setup(mock => mock.GetAllAsync(_userPayload)).ReturnsAsync(_userDtosPagination);
+            OkObjectResult? result = await _userController.GetAllAsync(_userPayload) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_userDtos);
+            result?.Value.Should().BeEquivalentTo(_userDtosPagination);
         }
 
-        [Fact] public void GetById_Test()
+        [Fact] public async Task GetById_Test()
         {
-            _userServiceMock.Setup(mock => mock.GetById(ValidUserId)).Returns(_userDto1);
-            OkObjectResult? result = _userController.GetById(ValidUserId) as OkObjectResult;
+            _userServiceMock.Setup(mock => mock.GetByIdAsync(ValidUserId)).ReturnsAsync(_userDtos[0]);
+            OkObjectResult? result = await _userController.GetByIdAsync(ValidUserId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_userDto1);
+            result?.Value.Should().BeEquivalentTo(_userDtos[0]);
         }
 
-        [Fact] public void Add_Test()
+        [Fact] public async Task Add_Test()
         {
-            _userServiceMock.Setup(mock => mock.Add(It.IsAny<UserDto>())).Returns(_newUserDto);
-            CreatedResult? result = _userController.Add(_newUserDto) as CreatedResult;
+            _userServiceMock.Setup(mock => mock.AddAsync(It.IsAny<UserDto>())).ReturnsAsync(_newUserDto);
+            CreatedResult? result = await _userController.AddAsync(_newUserDto) as CreatedResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status201Created);
             result?.Value.Should().BeEquivalentTo(_newUserDto);
         }
 
-        [Fact] public void UpdateById_Test()
+        [Fact] public async Task UpdateById_Test()
         {
-            UserDto updatedUserDto = _userDto1;
-            updatedUserDto.Name = _userDto2.Name;
-            updatedUserDto.Email = _userDto2.Email;
-            updatedUserDto.Phone = _userDto2.Phone;
-            updatedUserDto.Address = _userDto2.Address;
-            updatedUserDto.Birthday = _userDto2.Birthday;
-            updatedUserDto.ImageUrl = _userDto2.ImageUrl;
-            updatedUserDto.Role = _userDto2.Role;
-            _userServiceMock.Setup(mock => mock.UpdateById(It.IsAny<UserDto>(), ValidUserId)).Returns(updatedUserDto);
-            OkObjectResult? result = _userController.UpdateById(_userDto2, ValidUserId) as OkObjectResult;
+            UserDto updatedUserDto = _userDtos[0];
+            updatedUserDto.Name = _userDtos[1].Name;
+            updatedUserDto.Email = _userDtos[1].Email;
+            updatedUserDto.Phone = _userDtos[1].Phone;
+            updatedUserDto.Address = _userDtos[1].Address;
+            updatedUserDto.Birthday = _userDtos[1].Birthday;
+            updatedUserDto.ImageUrl = _userDtos[1].ImageUrl;
+            updatedUserDto.Role = _userDtos[1].Role;
+            _userServiceMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<UserDto>(), ValidUserId)).ReturnsAsync(updatedUserDto);
+            OkObjectResult? result = await _userController.UpdateByIdAsync(_userDtos[1], ValidUserId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(updatedUserDto);
         }
 
-        [Fact] public void DeleteById_Test()
+        [Fact] public async Task DeleteById_Test()
         {
-            UserDto deletedUserDto = _userDto1;
+            UserDto deletedUserDto = _userDtos[0];
             deletedUserDto.DeletedAt = DateTime.UtcNow;
-            _userServiceMock.Setup(mock => mock.DeleteById(ValidUserId)).Returns(deletedUserDto);
-            OkObjectResult? result = _userController.DeleteById(ValidUserId) as OkObjectResult;
+            _userServiceMock.Setup(mock => mock.DeleteByIdAsync(ValidUserId)).ReturnsAsync(deletedUserDto);
+            OkObjectResult? result = await _userController.DeleteByIdAsync(ValidUserId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(deletedUserDto);

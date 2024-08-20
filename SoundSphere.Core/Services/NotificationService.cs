@@ -2,6 +2,7 @@
 using SoundSphere.Core.Mappings;
 using SoundSphere.Core.Services.Interfaces;
 using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Request.Pagination;
 using SoundSphere.Database.Entities;
 using SoundSphere.Database.Repositories.Interfaces;
 
@@ -16,20 +17,20 @@ namespace SoundSphere.Core.Services
         public NotificationService(INotificationRepository notificationRepository, IUserRepository userRepository, IMapper mapper) =>
             (_notificationRepository, _userRepository, _mapper) = (notificationRepository, userRepository, mapper);
 
-        public List<NotificationDto> GetAll() => _notificationRepository.GetAll().ToDtos(_mapper);
+        public async Task<List<NotificationDto>> GetAllAsync(NotificationPaginationRequest payload) => (await _notificationRepository.GetAllAsync(payload)).ToDtos(_mapper);
 
-        public NotificationDto GetById(Guid id) => _notificationRepository.GetById(id).ToDto(_mapper);
+        public async Task<NotificationDto> GetByIdAsync(Guid id) => (await _notificationRepository.GetByIdAsync(id)).ToDto(_mapper);
 
-        public NotificationDto Add(NotificationDto notificationDto)
+        public async Task<NotificationDto> AddAsync(NotificationDto notificationDto)
         {
-            Notification notification = notificationDto.ToEntity(_userRepository, _mapper);
+            Notification notification = await notificationDto.ToEntityAsync(_userRepository, _mapper);
             _notificationRepository.LinkNotificationToSender(notification);
             _notificationRepository.LinkNotificationToReceiver(notification);
-            return _notificationRepository.Add(notification).ToDto(_mapper);
+            return (await _notificationRepository.AddAsync(notification)).ToDto(_mapper);
         }
 
-        public NotificationDto UpdateById(NotificationDto notificationDto, Guid id) => _notificationRepository.UpdateById(notificationDto.ToEntity(_userRepository, _mapper), id).ToDto(_mapper);
+        public async Task<NotificationDto> UpdateByIdAsync(NotificationDto notificationDto, Guid id) => (await _notificationRepository.UpdateByIdAsync(await notificationDto.ToEntityAsync(_userRepository, _mapper), id)).ToDto(_mapper);
 
-        public NotificationDto DeleteById(Guid id) => _notificationRepository.DeleteById(id).ToDto(_mapper);
+        public async Task<NotificationDto> DeleteByIdAsync(Guid id) => (await _notificationRepository.DeleteByIdAsync(id)).ToDto(_mapper);
     }
 }

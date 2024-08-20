@@ -1,17 +1,18 @@
 ﻿using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Request.Pagination;
 
 namespace SoundSphere.Core.Services.Interfaces
 {
     public interface INotificationService
     {
-        List<NotificationDto> GetAll();
+        Task<List<NotificationDto>> GetAllAsync(NotificationPaginationRequest payload);
 
-        NotificationDto GetById(Guid id);
+        Task<NotificationDto> GetByIdAsync(Guid id);
 
-        NotificationDto Add(NotificationDto notificationDto);
+        Task<NotificationDto> AddAsync(NotificationDto notificationDto);
 
-        NotificationDto UpdateById(NotificationDto notificationDto, Guid id);
+        Task<NotificationDto> UpdateByIdAsync(NotificationDto notificationDto, Guid id);
 
-        NotificationDto DeleteById(Guid id);
+        Task<NotificationDto> DeleteByIdAsync(Guid id);
     }
 }

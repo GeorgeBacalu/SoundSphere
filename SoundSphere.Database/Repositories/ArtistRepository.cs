@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SoundSphere.Database.Context;
+using SoundSphere.Database.Dtos.Request.Pagination;
 using SoundSphere.Database.Entities;
+using SoundSphere.Database.Extensions;
 using SoundSphere.Database.Repositories.Interfaces;
 using SoundSphere.Infrastructure.Exceptions;
 using static SoundSphere.Database.Constants;
@@ -13,43 +15,43 @@ namespace SoundSphere.Database.Repositories
 
         public ArtistRepository(AppDbContext context) => _context = context;
 
-        public List<Artist> GetAll() => _context.Artists
+        public async Task<List<Artist>> GetAllAsync(ArtistPaginationRequest payload) => await _context.Artists
             .Include(artist => artist.SimilarArtists)
             .Where(artist => artist.DeletedAt == null)
-            .OrderBy(artist => artist.CreatedAt)
-            .ToList();
+            .ApplyPagination(payload)
+            .ToListAsync();
 
-        public Artist GetById(Guid id) => _context.Artists
+        public async Task<Artist> GetByIdAsync(Guid id) => await _context.Artists
             .Include(artist => artist.SimilarArtists)
             .Where(artist => artist.DeletedAt == null)
-            .SingleOrDefault(artist => artist.Id == id)
+            .SingleOrDefaultAsync(artist => artist.Id == id)
             ?? throw new ResourceNotFoundException(string.Format(ArtistNotFound, id));
 
-        public Artist Add(Artist artist)
+        public async Task<Artist> AddAsync(Artist artist)
         {
             _context.Artists.Add(artist);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return artist;
         }
 
-        public Artist UpdateById(Artist artist, Guid id)
+        public async Task<Artist> UpdateByIdAsync(Artist artist, Guid id)
         {
-            Artist artistToUpdate = GetById(id);
+            Artist artistToUpdate = await GetByIdAsync(id);
             artistToUpdate.Name = artist.Name;
             artistToUpdate.ImageUrl = artist.ImageUrl;
             artistToUpdate.Bio = artist.Bio;
             artistToUpdate.SimilarArtists = artist.SimilarArtists;
             if (_context.Entry(artistToUpdate).State == EntityState.Modified)
                 artistToUpdate.UpdatedAt = DateTime.UtcNow;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return artistToUpdate;
         }
 
-        public Artist DeleteById(Guid id)
+        public async Task<Artist> DeleteByIdAsync(Guid id)
         {
-            Artist artistToDelete = GetById(id);
+            Artist artistToDelete = await GetByIdAsync(id);
             artistToDelete.DeletedAt = DateTime.UtcNow;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return artistToDelete;
         }
 

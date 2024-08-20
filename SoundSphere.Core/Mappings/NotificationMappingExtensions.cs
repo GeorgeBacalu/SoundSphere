@@ -9,16 +9,16 @@ namespace SoundSphere.Core.Mappings
     {
         public static List<NotificationDto> ToDtos(this List<Notification> notifications, IMapper mapper) => notifications.Select(notification => notification.ToDto(mapper)).ToList();
 
-        public static List<Notification> ToEntities(this List<NotificationDto> notificationDtos, IUserRepository userRepository, IMapper mapper) =>
-            notificationDtos.Select(notificationDto => notificationDto.ToEntity(userRepository, mapper)).ToList();
+        public static async Task<List<Notification>> ToEntitiesAsync(this List<NotificationDto> notificationDtos, IUserRepository userRepository, IMapper mapper) =>
+            (await Task.WhenAll(notificationDtos.Select(notificationDto => notificationDto.ToEntityAsync(userRepository, mapper)))).ToList();
 
         public static NotificationDto ToDto(this Notification notification, IMapper mapper) => mapper.Map<NotificationDto>(notification);
 
-        public static Notification ToEntity(this NotificationDto notificationDto, IUserRepository userRepository, IMapper mapper)
+        public static async Task<Notification> ToEntityAsync(this NotificationDto notificationDto, IUserRepository userRepository, IMapper mapper)
         {
             Notification notification = mapper.Map<Notification>(notificationDto);
-            notification.Sender = userRepository.GetById(notification.SenderId);
-            notification.Receiver = userRepository.GetById(notification.ReceiverId);
+            notification.Sender = await userRepository.GetByIdAsync(notification.SenderId);
+            notification.Receiver = await userRepository.GetByIdAsync(notification.ReceiverId);
             return notification;
         }
     }

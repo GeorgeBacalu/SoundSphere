@@ -14,58 +14,54 @@ namespace SoundSphere.Test.Unit.Controllers
     {
         private readonly Mock<IFeedbackService> _feedbackServiceMock = new();
         private readonly FeedbackController _feedbackController;
-        private readonly FeedbackDto _feedbackDto1 = GetFeedbackDto1();
-        private readonly FeedbackDto _feedbackDto2 = GetFeedbackDto1();
-        private readonly FeedbackDto _newFeedbackDto = GetNewFeedbackDto();
-        private readonly List<FeedbackDto> _feedbackDtos = GetFeedbackDtos();
 
         public FeedbackControllerTest() => _feedbackController = new(_feedbackServiceMock.Object);
 
-        [Fact] public void GetAll_Test()
+        [Fact] public async Task GetAll_Test()
         {
-            _feedbackServiceMock.Setup(mock => mock.GetAll()).Returns(_feedbackDtos);
-            OkObjectResult? result = _feedbackController.GetAll() as OkObjectResult;
+            _feedbackServiceMock.Setup(mock => mock.GetAllAsync(_feedbackPayload)).ReturnsAsync(_feedbackDtosPagination);
+            OkObjectResult? result = await _feedbackController.GetAllAsync(_feedbackPayload) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_feedbackDtos);
+            result?.Value.Should().BeEquivalentTo(_feedbackDtosPagination);
         }
 
-        [Fact] public void GetById_Test()
+        [Fact] public async Task GetById_Test()
         {
-            _feedbackServiceMock.Setup(mock => mock.GetById(ValidFeedbackId)).Returns(_feedbackDto1);
-            OkObjectResult? result = _feedbackController.GetById(ValidFeedbackId) as OkObjectResult;
+            _feedbackServiceMock.Setup(mock => mock.GetByIdAsync(ValidFeedbackId)).ReturnsAsync(_feedbackDtos[0]);
+            OkObjectResult? result = await _feedbackController.GetByIdAsync(ValidFeedbackId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_feedbackDto1);
+            result?.Value.Should().BeEquivalentTo(_feedbackDtos[0]);
         }
 
-        [Fact] public void Add_Test()
+        [Fact] public async Task Add_Test()
         {
-            _feedbackServiceMock.Setup(mock => mock.Add(It.IsAny<FeedbackDto>())).Returns(_newFeedbackDto);
-            CreatedResult? result = _feedbackController.Add(_newFeedbackDto) as CreatedResult;
+            _feedbackServiceMock.Setup(mock => mock.AddAsync(It.IsAny<FeedbackDto>())).ReturnsAsync(_newFeedbackDto);
+            CreatedResult? result = await _feedbackController.AddAsync(_newFeedbackDto) as CreatedResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status201Created);
             result?.Value.Should().BeEquivalentTo(_newFeedbackDto);
         }
 
-        [Fact] public void UpdateById_Test()
+        [Fact] public async Task UpdateById_Test()
         {
-            FeedbackDto updatedFeedbackDto = _feedbackDto1;
-            updatedFeedbackDto.Type = _feedbackDto2.Type;
-            updatedFeedbackDto.Message = _feedbackDto2.Message;
-            _feedbackServiceMock.Setup(mock => mock.UpdateById(It.IsAny<FeedbackDto>(), ValidFeedbackId)).Returns(updatedFeedbackDto);
-            OkObjectResult? result = _feedbackController.UpdateById(_feedbackDto2, ValidFeedbackId) as OkObjectResult;
+            FeedbackDto updatedFeedbackDto = _feedbackDtos[0];
+            updatedFeedbackDto.Type = _feedbackDtos[1].Type;
+            updatedFeedbackDto.Message = _feedbackDtos[1].Message;
+            _feedbackServiceMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<FeedbackDto>(), ValidFeedbackId)).ReturnsAsync(updatedFeedbackDto);
+            OkObjectResult? result = await _feedbackController.UpdateByIdAsync(_feedbackDtos[1], ValidFeedbackId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(updatedFeedbackDto);
         }
 
-        [Fact] public void DeleteById_Test()
+        [Fact] public async Task DeleteById_Test()
         {
-            FeedbackDto deletedFeedbackDto = _feedbackDto1;
+            FeedbackDto deletedFeedbackDto = _feedbackDtos[0];
             deletedFeedbackDto.DeletedAt = DateTime.UtcNow;
-            _feedbackServiceMock.Setup(mock => mock.DeleteById(ValidFeedbackId)).Returns(deletedFeedbackDto);
-            OkObjectResult? result = _feedbackController.DeleteById(ValidFeedbackId) as OkObjectResult;
+            _feedbackServiceMock.Setup(mock => mock.DeleteByIdAsync(ValidFeedbackId)).ReturnsAsync(deletedFeedbackDto);
+            OkObjectResult? result = await _feedbackController.DeleteByIdAsync(ValidFeedbackId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(deletedFeedbackDto);

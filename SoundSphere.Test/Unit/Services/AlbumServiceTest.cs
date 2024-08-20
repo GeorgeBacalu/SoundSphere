@@ -18,14 +18,6 @@ namespace SoundSphere.Test.Unit.Services
         private readonly Mock<IAlbumRepository> _albumRepositoryMock = new();
         private readonly IAlbumService _albumService;
         private readonly IMapper _mapper;
-        private readonly Album _album1 = GetAlbum1();
-        private readonly Album _album2 = GetAlbum2();
-        private readonly Album _newAlbum = GetNewAlbum();
-        private readonly List<Album> _albums = GetAlbums();
-        private readonly AlbumDto _albumDto1 = GetAlbumDto1();
-        private readonly AlbumDto _albumDto2 = GetAlbumDto2();
-        private readonly AlbumDto _newAlbumDto = GetNewAlbumDto();
-        private readonly List<AlbumDto> _albumDtos = GetAlbumDtos();
 
         public AlbumServiceTest()
         {
@@ -33,73 +25,73 @@ namespace SoundSphere.Test.Unit.Services
             _albumService = new AlbumService(_albumRepositoryMock.Object, _mapper);
         }
 
-        [Fact] public void GetAll_Test()
+        [Fact] public async Task GetAll_Test()
         {
-            _albumRepositoryMock.Setup(mock => mock.GetAll()).Returns(_albums);
-            _albumService.GetAll().Should().BeEquivalentTo(_albumDtos);
+            _albumRepositoryMock.Setup(mock => mock.GetAllAsync(_albumPayload)).ReturnsAsync(_albumsPagination);
+            (await _albumService.GetAllAsync(_albumPayload)).Should().BeEquivalentTo(_albumDtosPagination);
         }
 
-        [Fact] public void GetById_ValidId_Test()
+        [Fact] public async Task GetById_ValidId_Test()
         {
-            _albumRepositoryMock.Setup(mock => mock.GetById(ValidAlbumId)).Returns(_album1);
-            _albumService.GetById(ValidAlbumId).Should().BeEquivalentTo(_albumDto1);
+            _albumRepositoryMock.Setup(mock => mock.GetByIdAsync(ValidAlbumId)).ReturnsAsync(_albums[0]);
+            (await _albumService.GetByIdAsync(ValidAlbumId)).Should().BeEquivalentTo(_albumDtos[0]);
         }
 
-        [Fact] public void GetById_InvalidId_Test()
+        [Fact] public async Task GetById_InvalidId_Test()
         {
-            _albumRepositoryMock.Setup(mock => mock.GetById(InvalidId)).Throws(new ResourceNotFoundException(string.Format(AlbumNotFound, InvalidId)));
-            _albumService.Invoking(service => service.GetById(InvalidId))
-                .Should().Throw<ResourceNotFoundException>()
+            _albumRepositoryMock.Setup(mock => mock.GetByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(AlbumNotFound, InvalidId)));
+            await _albumService.Invoking(service => service.GetByIdAsync(InvalidId))
+                .Should().ThrowAsync<ResourceNotFoundException>()
                 .WithMessage(string.Format(AlbumNotFound, InvalidId));
-            _albumRepositoryMock.Verify(mock => mock.GetById(InvalidId));
+            _albumRepositoryMock.Verify(mock => mock.GetByIdAsync(InvalidId));
         }
 
-        [Fact] public void Add_Test()
+        [Fact] public async Task Add_Test()
         {
-            _albumRepositoryMock.Setup(mock => mock.Add(It.IsAny<Album>())).Returns(_newAlbum);
-            _albumService.Add(_newAlbumDto).Should().BeEquivalentTo(_newAlbumDto, options => options.Excluding(album => album.Id).Excluding(album => album.CreatedAt).Excluding(album => album.UpdatedAt));
-            _albumRepositoryMock.Verify(mock => mock.Add(It.IsAny<Album>()));
+            _albumRepositoryMock.Setup(mock => mock.AddAsync(It.IsAny<Album>())).ReturnsAsync(_newAlbum);
+            (await _albumService.AddAsync(_newAlbumDto)).Should().BeEquivalentTo(_newAlbumDto, options => options.Excluding(album => album.Id).Excluding(album => album.CreatedAt).Excluding(album => album.UpdatedAt));
+            _albumRepositoryMock.Verify(mock => mock.AddAsync(It.IsAny<Album>()));
         }
 
-        [Fact] public void UpdateById_ValidId_Test()
+        [Fact] public async Task UpdateById_ValidId_Test()
         {
-            Album updatedAlbum = _album1;
-            updatedAlbum.Title = _album2.Title;
-            updatedAlbum.ImageUrl = _album2.ImageUrl;
-            updatedAlbum.ReleaseDate = _album2.ReleaseDate;
-            updatedAlbum.SimilarAlbums = _album2.SimilarAlbums;
+            Album updatedAlbum = _albums[0];
+            updatedAlbum.Title = _albums[1].Title;
+            updatedAlbum.ImageUrl = _albums[1].ImageUrl;
+            updatedAlbum.ReleaseDate = _albums[1].ReleaseDate;
+            updatedAlbum.SimilarAlbums = _albums[1].SimilarAlbums;
             AlbumDto updatedAlbumDto = updatedAlbum.ToDto(_mapper);
-            _albumRepositoryMock.Setup(mock => mock.UpdateById(It.IsAny<Album>(), ValidAlbumId)).Returns(updatedAlbum);
-            _albumService.UpdateById(_albumDto2, ValidAlbumId).Should().BeEquivalentTo(updatedAlbumDto);
-            _albumRepositoryMock.Verify(mock => mock.UpdateById(It.IsAny<Album>(), ValidAlbumId));
+            _albumRepositoryMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<Album>(), ValidAlbumId)).ReturnsAsync(updatedAlbum);
+            (await _albumService.UpdateByIdAsync(_albumDtos[1], ValidAlbumId)).Should().BeEquivalentTo(updatedAlbumDto);
+            _albumRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Album>(), ValidAlbumId));
         }
 
-        [Fact] public void UpdateById_InvalidId_Test()
+        [Fact] public async Task UpdateById_InvalidId_Test()
         {
-            _albumRepositoryMock.Setup(mock => mock.UpdateById(It.IsAny<Album>(), InvalidId)).Throws(new ResourceNotFoundException(string.Format(AlbumNotFound, InvalidId)));
-            _albumService.Invoking(service => service.UpdateById(_albumDto2, InvalidId))
-                .Should().Throw<ResourceNotFoundException>()
+            _albumRepositoryMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<Album>(), InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(AlbumNotFound, InvalidId)));
+            await _albumService.Invoking(service => service.UpdateByIdAsync(_albumDtos[1], InvalidId))
+                .Should().ThrowAsync<ResourceNotFoundException>()
                 .WithMessage(string.Format(AlbumNotFound, InvalidId));
-            _albumRepositoryMock.Verify(mock => mock.UpdateById(It.IsAny<Album>(), InvalidId));
+            _albumRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Album>(), InvalidId));
         }
 
-        [Fact] public void DeleteById_ValidId_Test()
+        [Fact] public async Task DeleteById_ValidId_Test()
         {
-            Album deletedAlbum = _album1;
+            Album deletedAlbum = _albums[0];
             deletedAlbum.DeletedAt = DateTime.UtcNow;
             AlbumDto deletedAlbumDto = deletedAlbum.ToDto(_mapper);
-            _albumRepositoryMock.Setup(mock => mock.DeleteById(ValidAlbumId)).Returns(deletedAlbum);
-            _albumService.DeleteById(ValidAlbumId).Should().BeEquivalentTo(deletedAlbumDto);
-            _albumRepositoryMock.Verify(mock => mock.DeleteById(ValidAlbumId));
+            _albumRepositoryMock.Setup(mock => mock.DeleteByIdAsync(ValidAlbumId)).ReturnsAsync(deletedAlbum);
+            (await _albumService.DeleteByIdAsync(ValidAlbumId)).Should().BeEquivalentTo(deletedAlbumDto);
+            _albumRepositoryMock.Verify(mock => mock.DeleteByIdAsync(ValidAlbumId));
         }
 
-        [Fact] public void DeleteById_InvalidId_Test()
+        [Fact] public async Task DeleteById_InvalidId_Test()
         {
-            _albumRepositoryMock.Setup(mock => mock.DeleteById(InvalidId)).Throws(new ResourceNotFoundException(string.Format(AlbumNotFound, InvalidId)));
-            _albumService.Invoking(service => service.DeleteById(InvalidId))
-                .Should().Throw<ResourceNotFoundException>()
+            _albumRepositoryMock.Setup(mock => mock.DeleteByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(AlbumNotFound, InvalidId)));
+            await _albumService.Invoking(service => service.DeleteByIdAsync(InvalidId))
+                .Should().ThrowAsync<ResourceNotFoundException>()
                 .WithMessage(string.Format(AlbumNotFound, InvalidId));
-            _albumRepositoryMock.Verify(mock => mock.DeleteById(InvalidId));
+            _albumRepositoryMock.Verify(mock => mock.DeleteByIdAsync(InvalidId));
         }
     }
 }

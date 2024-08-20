@@ -9,8 +9,8 @@ namespace SoundSphere.Core.Mappings
     {
         public static List<PlaylistDto> ToDtos(this List<Playlist> playlists, IMapper mapper) => playlists.Select(playlist => playlist.ToDto(mapper)).ToList();
 
-        public static List<Playlist> ToEntities(this List<PlaylistDto> playlistDtos, IUserRepository userRepository, ISongRepository songRepository, IMapper mapper) =>
-            playlistDtos.Select(playlistDto => playlistDto.ToEntity(userRepository, songRepository, mapper)).ToList();
+        public static async Task<List<Playlist>> ToEntitiesAsync(this List<PlaylistDto> playlistDtos, IUserRepository userRepository, ISongRepository songRepository, IMapper mapper) =>
+            (await Task.WhenAll(playlistDtos.Select(playlistDto => playlistDto.ToEntityAsync(userRepository, songRepository, mapper)))).ToList();
 
         public static PlaylistDto ToDto(this Playlist playlist, IMapper mapper)
         {
@@ -19,11 +19,11 @@ namespace SoundSphere.Core.Mappings
             return playlistDto;
         }
 
-        public static Playlist ToEntity(this PlaylistDto playlistDto, IUserRepository userRepository, ISongRepository songRepository, IMapper mapper)
+        public static async Task<Playlist> ToEntityAsync(this PlaylistDto playlistDto, IUserRepository userRepository, ISongRepository songRepository, IMapper mapper)
         {
             Playlist playlist = mapper.Map<Playlist>(playlistDto);
-            playlist.User = userRepository.GetById(playlistDto.UserId);
-            playlist.Songs = playlistDto.SongsIds.Select(songRepository.GetById).ToList();
+            playlist.User = await userRepository.GetByIdAsync(playlistDto.UserId);
+            playlist.Songs = (await Task.WhenAll(playlistDto.SongsIds.Select(songRepository.GetByIdAsync))).ToList();
             return playlist;
         }
     }

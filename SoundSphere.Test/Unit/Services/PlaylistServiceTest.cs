@@ -22,16 +22,6 @@ namespace SoundSphere.Test.Unit.Services
         private readonly Mock<ISongRepository> _songRepositoryMock = new();
         private readonly IPlaylistService _playlistService;
         private readonly IMapper _mapper;
-        private readonly Playlist _playlist1 = GetPlaylist1();
-        private readonly Playlist _playlist2 = GetPlaylist2();
-        private readonly Playlist _newPlaylist = GetNewPlaylist();
-        private readonly List<Playlist> _playlists = GetPlaylists();
-        private readonly PlaylistDto _playlistDto1 = GetPlaylistDto1();
-        private readonly PlaylistDto _playlistDto2 = GetPlaylistDto2();
-        private readonly PlaylistDto _newPlaylistDto = GetNewPlaylistDto();
-        private readonly List<PlaylistDto> _playlistDtos = GetPlaylistDtos();
-        private readonly User _user1 = GetUser1();
-        private readonly List<Song> _songs1 = GetSongs1();
 
         public PlaylistServiceTest()
         {
@@ -39,72 +29,72 @@ namespace SoundSphere.Test.Unit.Services
             _playlistService = new PlaylistService(_playlistRepositoryMock.Object, _userRepositoryMock.Object, _songRepositoryMock.Object, _mapper);
         }
 
-        [Fact] public void GetAll_Test()
+        [Fact] public async Task GetAll_Test()
         {
-            _playlistRepositoryMock.Setup(mock => mock.GetAll()).Returns(_playlists);
-            _playlistService.GetAll().Should().BeEquivalentTo(_playlistDtos);
+            _playlistRepositoryMock.Setup(mock => mock.GetAllAsync(_playlistPayload)).ReturnsAsync(_playlistsPagination);
+            (await _playlistService.GetAllAsync(_playlistPayload)).Should().BeEquivalentTo(_playlistDtosPagination);
         }
 
-        [Fact] public void GetById_ValidId_Test()
+        [Fact] public async Task GetById_ValidId_Test()
         {
-            _playlistRepositoryMock.Setup(mock => mock.GetById(ValidPlaylistId)).Returns(_playlist1);
-            _playlistService.GetById(ValidPlaylistId).Should().BeEquivalentTo(_playlistDto1);
+            _playlistRepositoryMock.Setup(mock => mock.GetByIdAsync(ValidPlaylistId)).ReturnsAsync(_playlists[0]);
+            (await _playlistService.GetByIdAsync(ValidPlaylistId)).Should().BeEquivalentTo(_playlistDtos[0]);
         }
 
-        [Fact] public void GetById_InvalidId_Test()
+        [Fact] public async Task GetById_InvalidId_Test()
         {
-            _playlistRepositoryMock.Setup(mock => mock.GetById(InvalidId)).Throws(new ResourceNotFoundException(string.Format(PlaylistNotFound, InvalidId)));
-            _playlistService.Invoking(service => service.GetById(InvalidId))
-                .Should().Throw<ResourceNotFoundException>()
+            _playlistRepositoryMock.Setup(mock => mock.GetByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(PlaylistNotFound, InvalidId)));
+            await _playlistService.Invoking(service => service.GetByIdAsync(InvalidId))
+                .Should().ThrowAsync<ResourceNotFoundException>()
                 .WithMessage(string.Format(PlaylistNotFound, InvalidId));
-            _playlistRepositoryMock.Verify(mock => mock.GetById(InvalidId));
+            _playlistRepositoryMock.Verify(mock => mock.GetByIdAsync(InvalidId));
         }
 
-        [Fact] public void Add_Test()
+        [Fact] public async Task Add_Test()
         {
-            _songs1.ForEach(song => _songRepositoryMock.Setup(mock => mock.GetById(song.Id)).Returns(song));
-            _userRepositoryMock.Setup(mock => mock.GetById(ValidUserId)).Returns(_user1);
-            _playlistRepositoryMock.Setup(mock => mock.Add(It.IsAny<Playlist>())).Returns(_newPlaylist);
-            _playlistService.Add(_newPlaylistDto).Should().BeEquivalentTo(_newPlaylistDto, options => options.Excluding(playlist => playlist.Id).Excluding(playlist => playlist.CreatedAt).Excluding(playlist => playlist.UpdatedAt));
-            _playlistRepositoryMock.Verify(mock => mock.Add(It.IsAny<Playlist>()));
+            _songs.Take(2).ToList().ForEach(song => _songRepositoryMock.Setup(mock => mock.GetByIdAsync(song.Id)).ReturnsAsync(song));
+            _userRepositoryMock.Setup(mock => mock.GetByIdAsync(ValidUserId)).ReturnsAsync(_users[0]);
+            _playlistRepositoryMock.Setup(mock => mock.AddAsync(It.IsAny<Playlist>())).ReturnsAsync(_newPlaylist);
+            (await _playlistService.AddAsync(_newPlaylistDto)).Should().BeEquivalentTo(_newPlaylistDto, options => options.Excluding(playlist => playlist.Id).Excluding(playlist => playlist.CreatedAt).Excluding(playlist => playlist.UpdatedAt));
+            _playlistRepositoryMock.Verify(mock => mock.AddAsync(It.IsAny<Playlist>()));
         }
 
-        [Fact] public void UpdateById_ValidId_Test()
+        [Fact] public async Task UpdateById_ValidId_Test()
         {
-            Playlist updatedPlaylist = _playlist1;
-            updatedPlaylist.Title = _playlist2.Title;
+            Playlist updatedPlaylist = _playlists[0];
+            updatedPlaylist.Title = _playlists[1].Title;
             PlaylistDto updatedPlaylistDto = updatedPlaylist.ToDto(_mapper);
-            _playlistRepositoryMock.Setup(mock => mock.UpdateById(It.IsAny<Playlist>(), ValidPlaylistId)).Returns(updatedPlaylist);
-            _playlistService.UpdateById(_playlistDto2, ValidPlaylistId).Should().BeEquivalentTo(updatedPlaylistDto);
-            _playlistRepositoryMock.Verify(mock => mock.UpdateById(It.IsAny<Playlist>(), ValidPlaylistId));
+            _playlistRepositoryMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<Playlist>(), ValidPlaylistId)).ReturnsAsync(updatedPlaylist);
+            (await _playlistService.UpdateByIdAsync(_playlistDtos[1], ValidPlaylistId)).Should().BeEquivalentTo(updatedPlaylistDto);
+            _playlistRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Playlist>(), ValidPlaylistId));
         }
 
-        [Fact] public void UpdateById_InvalidId_Test()
+        [Fact] public async Task UpdateById_InvalidId_Test()
         {
-            _playlistRepositoryMock.Setup(mock => mock.UpdateById(It.IsAny<Playlist>(), InvalidId)).Throws(new ResourceNotFoundException(string.Format(PlaylistNotFound, InvalidId)));
-            _playlistService.Invoking(service => service.UpdateById(_playlistDto2, InvalidId))
-                .Should().Throw<ResourceNotFoundException>()
+            _playlistRepositoryMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<Playlist>(), InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(PlaylistNotFound, InvalidId)));
+            await _playlistService.Invoking(service => service.UpdateByIdAsync(_playlistDtos[1], InvalidId))
+                .Should().ThrowAsync<ResourceNotFoundException>()
                 .WithMessage(string.Format(PlaylistNotFound, InvalidId));
-            _playlistRepositoryMock.Verify(mock => mock.UpdateById(It.IsAny<Playlist>(), InvalidId));
+            _playlistRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Playlist>(), InvalidId));
         }
 
-        [Fact] public void DeleteById_ValidId_Test()
+        [Fact] public async Task DeleteById_ValidId_Test()
         {
-            Playlist deletedPlaylist = _playlist1;
+            Playlist deletedPlaylist = _playlists[0];
             deletedPlaylist.DeletedAt = DateTime.UtcNow;
             PlaylistDto deletedPlaylistDto = deletedPlaylist.ToDto(_mapper);
-            _playlistRepositoryMock.Setup(mock => mock.DeleteById(ValidPlaylistId)).Returns(deletedPlaylist);
-            _playlistService.DeleteById(ValidPlaylistId).Should().BeEquivalentTo(deletedPlaylistDto);
-            _playlistRepositoryMock.Verify(mock => mock.DeleteById(ValidPlaylistId));
+            _playlistRepositoryMock.Setup(mock => mock.DeleteByIdAsync(ValidPlaylistId)).ReturnsAsync(deletedPlaylist);
+            (await _playlistService.DeleteByIdAsync(ValidPlaylistId)).Should().BeEquivalentTo(deletedPlaylistDto);
+            _playlistRepositoryMock.Verify(mock => mock.DeleteByIdAsync(ValidPlaylistId));
         }
 
-        [Fact] public void DeleteById_InvalidId_Test()
+        [Fact] public async Task DeleteById_InvalidId_Test()
         {
-            _playlistRepositoryMock.Setup(mock => mock.DeleteById(InvalidId)).Throws(new ResourceNotFoundException(string.Format(PlaylistNotFound, InvalidId)));
-            _playlistService.Invoking(service => service.DeleteById(InvalidId))
-                .Should().Throw<ResourceNotFoundException>()
+            _playlistRepositoryMock.Setup(mock => mock.DeleteByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(PlaylistNotFound, InvalidId)));
+            await _playlistService.Invoking(service => service.DeleteByIdAsync(InvalidId))
+                .Should().ThrowAsync<ResourceNotFoundException>()
                 .WithMessage(string.Format(PlaylistNotFound, InvalidId));
-            _playlistRepositoryMock.Verify(mock => mock.DeleteById(InvalidId));
+            _playlistRepositoryMock.Verify(mock => mock.DeleteByIdAsync(InvalidId));
         }
     }
 }

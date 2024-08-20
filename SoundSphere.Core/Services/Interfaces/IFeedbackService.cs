@@ -1,17 +1,18 @@
 ﻿using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Request.Pagination;
 
 namespace SoundSphere.Core.Services.Interfaces
 {
     public interface IFeedbackService
     {
-        List<FeedbackDto> GetAll();
+        Task<List<FeedbackDto>> GetAllAsync(FeedbackPaginationRequest payload);
 
-        FeedbackDto GetById(Guid id);
+        Task<FeedbackDto> GetByIdAsync(Guid id);
 
-        FeedbackDto Add(FeedbackDto feedbackDto);
+        Task<FeedbackDto> AddAsync(FeedbackDto feedbackDto);
 
-        FeedbackDto UpdateById(FeedbackDto feedbackDto, Guid id);
+        Task<FeedbackDto> UpdateByIdAsync(FeedbackDto feedbackDto, Guid id);
 
-        FeedbackDto DeleteById(Guid id);
+        Task<FeedbackDto> DeleteByIdAsync(Guid id);
     }
 }

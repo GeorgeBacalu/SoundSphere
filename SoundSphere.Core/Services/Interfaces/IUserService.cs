@@ -1,17 +1,18 @@
 ﻿using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Request.Pagination;
 
 namespace SoundSphere.Core.Services.Interfaces
 {
     public interface IUserService
     {
-        List<UserDto> GetAll();
+        Task<List<UserDto>> GetAllAsync(UserPaginationRequest payload);
 
-        UserDto GetById(Guid id);
+        Task<UserDto> GetByIdAsync(Guid id);
 
-        UserDto Add(UserDto userDto);
+        Task<UserDto> AddAsync(UserDto userDto);
 
-        UserDto UpdateById(UserDto userDto, Guid id);
+        Task<UserDto> UpdateByIdAsync(UserDto userDto, Guid id);
 
-        UserDto DeleteById(Guid id);
+        Task<UserDto> DeleteByIdAsync(Guid id);
     }
 }

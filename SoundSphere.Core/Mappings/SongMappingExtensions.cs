@@ -9,8 +9,8 @@ namespace SoundSphere.Core.Mappings
     {
         public static List<SongDto> ToDtos(this List<Song> songs, IMapper mapper) => songs.Select(song => song.ToDto(mapper)).ToList();
 
-        public static List<Song> ToEntities(this List<SongDto> songDtos, IAlbumRepository albumRepository, IArtistRepository artistRepository, IMapper mapper) =>
-            songDtos.Select(songDto => songDto.ToEntity(albumRepository, artistRepository, mapper)).ToList();
+        public static async Task<List<Song>> ToEntitiesAsync(this List<SongDto> songDtos, IAlbumRepository albumRepository, IArtistRepository artistRepository, IMapper mapper) =>
+            (await Task.WhenAll(songDtos.Select(songDto => songDto.ToEntityAsync(albumRepository, artistRepository, mapper)))).ToList();
 
         public static SongDto ToDto(this Song song, IMapper mapper)
         {
@@ -20,11 +20,11 @@ namespace SoundSphere.Core.Mappings
             return songDto;
         }
 
-        public static Song ToEntity(this SongDto songDto, IAlbumRepository albumRepository, IArtistRepository artistRepository, IMapper mapper)
+        public static async Task<Song> ToEntityAsync(this SongDto songDto, IAlbumRepository albumRepository, IArtistRepository artistRepository, IMapper mapper)
         {
             Song song = mapper.Map<Song>(songDto);
-            song.Album = albumRepository.GetById(songDto.AlbumId);
-            song.Artists = songDto.ArtistsIds.Select(artistRepository.GetById).ToList();
+            song.Album = await albumRepository.GetByIdAsync(songDto.AlbumId);
+            song.Artists = (await Task.WhenAll(songDto.ArtistsIds.Select(artistRepository.GetByIdAsync))).ToList();
             song.SimilarSongs = songDto.SimilarSongsIds.Select(id => new SongPair { SongId = song.Id, SimilarSongId = id }).ToList();
             return song;
         }

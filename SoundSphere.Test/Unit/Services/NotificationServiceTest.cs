@@ -20,16 +20,6 @@ namespace SoundSphere.Test.Unit.Services
         private readonly Mock<IUserRepository> _userRepositoryMock = new();
         private readonly INotificationService _notificationService;
         private readonly IMapper _mapper;
-        private readonly Notification _notification1 = GetNotification1();
-        private readonly Notification _notification2 = GetNotification2();
-        private readonly Notification _newNotification = GetNewNotification();
-        private readonly List<Notification> _notifications = GetNotifications();
-        private readonly NotificationDto _notificationDto1 = GetNotificationDto1();
-        private readonly NotificationDto _notificationDto2 = GetNotificationDto2();
-        private readonly NotificationDto _newNotificationDto = GetNewNotificationDto();
-        private readonly List<NotificationDto> _notificationDtos = GetNotificationDtos();
-        private readonly User _user1 = GetUser1();
-        private readonly User _user2 = GetUser2();
 
         public NotificationServiceTest()
         {
@@ -37,74 +27,74 @@ namespace SoundSphere.Test.Unit.Services
             _notificationService = new NotificationService(_notificationRepositoryMock.Object, _userRepositoryMock.Object, _mapper);
         }
 
-        [Fact] public void GetAll_Test()
+        [Fact] public async Task GetAll_Test()
         {
-            _notificationRepositoryMock.Setup(mock => mock.GetAll()).Returns(_notifications);
-            _notificationService.GetAll().Should().BeEquivalentTo(_notificationDtos);
+            _notificationRepositoryMock.Setup(mock => mock.GetAllAsync(_notificationPayload)).ReturnsAsync(_notificationsPagination);
+            (await _notificationService.GetAllAsync(_notificationPayload)).Should().BeEquivalentTo(_notificationDtosPagination);
         }
 
-        [Fact] public void GetById_ValidId_Test()
+        [Fact] public async Task GetById_ValidId_Test()
         {
-            _notificationRepositoryMock.Setup(mock => mock.GetById(ValidNotificationId)).Returns(_notification1);
-            _notificationService.GetById(ValidNotificationId).Should().BeEquivalentTo(_notificationDto1);
+            _notificationRepositoryMock.Setup(mock => mock.GetByIdAsync(ValidNotificationId)).ReturnsAsync(_notifications[0]);
+            (await _notificationService.GetByIdAsync(ValidNotificationId)).Should().BeEquivalentTo(_notificationDtos[0]);
         }
 
-        [Fact] public void GetById_InvalidId_Test()
+        [Fact] public async Task GetById_InvalidId_Test()
         {
-            _notificationRepositoryMock.Setup(mock => mock.GetById(InvalidId)).Throws(new ResourceNotFoundException(string.Format(NotificationNotFound, InvalidId)));
-            _notificationService.Invoking(service => service.GetById(InvalidId))
-                .Should().Throw<ResourceNotFoundException>()
+            _notificationRepositoryMock.Setup(mock => mock.GetByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(NotificationNotFound, InvalidId)));
+            await _notificationService.Invoking(service => service.GetByIdAsync(InvalidId))
+                .Should().ThrowAsync<ResourceNotFoundException>()
                 .WithMessage(string.Format(NotificationNotFound, InvalidId));
-            _notificationRepositoryMock.Verify(mock => mock.GetById(InvalidId));
+            _notificationRepositoryMock.Verify(mock => mock.GetByIdAsync(InvalidId));
         }
 
-        [Fact] public void Add_Test()
+        [Fact] public async Task Add_Test()
         {
-            _userRepositoryMock.Setup(mock => mock.GetById(ValidUserId)).Returns(_user1);
-            _userRepositoryMock.Setup(mock => mock.GetById(ValidUserId2)).Returns(_user2);
-            _notificationRepositoryMock.Setup(mock => mock.Add(It.IsAny<Notification>())).Returns(_newNotification);
-            _notificationService.Add(_newNotificationDto).Should().BeEquivalentTo(_newNotificationDto, options => options.Excluding(notification => notification.Id).Excluding(notification => notification.CreatedAt).Excluding(notification => notification.UpdatedAt));
-            _notificationRepositoryMock.Verify(mock => mock.Add(It.IsAny<Notification>()));
+            _userRepositoryMock.Setup(mock => mock.GetByIdAsync(ValidUserId)).ReturnsAsync(_users[0]);
+            _userRepositoryMock.Setup(mock => mock.GetByIdAsync(ValidUserId2)).ReturnsAsync(_users[1]);
+            _notificationRepositoryMock.Setup(mock => mock.AddAsync(It.IsAny<Notification>())).ReturnsAsync(_newNotification);
+            (await _notificationService.AddAsync(_newNotificationDto)).Should().BeEquivalentTo(_newNotificationDto, options => options.Excluding(notification => notification.Id).Excluding(notification => notification.CreatedAt).Excluding(notification => notification.UpdatedAt));
+            _notificationRepositoryMock.Verify(mock => mock.AddAsync(It.IsAny<Notification>()));
         }
 
-        [Fact] public void UpdateById_ValidId_Test()
+        [Fact] public async Task UpdateById_ValidId_Test()
         {
-            Notification updatedNotification = _notification1;
-            updatedNotification.Type = _notification2.Type;
-            updatedNotification.Message = _notification2.Message;
-            updatedNotification.IsRead = _notification2.IsRead;
+            Notification updatedNotification = _notifications[0];
+            updatedNotification.Type = _notifications[1].Type;
+            updatedNotification.Message = _notifications[1].Message;
+            updatedNotification.IsRead = _notifications[1].IsRead;
             NotificationDto updatedNotificationDto = updatedNotification.ToDto(_mapper);
-            _notificationRepositoryMock.Setup(mock => mock.UpdateById(It.IsAny<Notification>(), ValidNotificationId)).Returns(updatedNotification);
-            _notificationService.UpdateById(_notificationDto2, ValidNotificationId).Should().BeEquivalentTo(updatedNotificationDto);
-            _notificationRepositoryMock.Verify(mock => mock.UpdateById(It.IsAny<Notification>(), ValidNotificationId));
+            _notificationRepositoryMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<Notification>(), ValidNotificationId)).ReturnsAsync(updatedNotification);
+            (await _notificationService.UpdateByIdAsync(_notificationDtos[1], ValidNotificationId)).Should().BeEquivalentTo(updatedNotificationDto);
+            _notificationRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Notification>(), ValidNotificationId));
         }
 
-        [Fact] public void UpdateById_InvalidId_Test()
+        [Fact] public async Task UpdateById_InvalidId_Test()
         {
-            _notificationRepositoryMock.Setup(mock => mock.UpdateById(It.IsAny<Notification>(), InvalidId)).Throws(new ResourceNotFoundException(string.Format(NotificationNotFound, InvalidId)));
-            _notificationService.Invoking(service => service.UpdateById(_notificationDto2, InvalidId))
-                .Should().Throw<ResourceNotFoundException>()
+            _notificationRepositoryMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<Notification>(), InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(NotificationNotFound, InvalidId)));
+            await _notificationService.Invoking(service => service.UpdateByIdAsync(_notificationDtos[1], InvalidId))
+                .Should().ThrowAsync<ResourceNotFoundException>()
                 .WithMessage(string.Format(NotificationNotFound, InvalidId));
-            _notificationRepositoryMock.Verify(mock => mock.UpdateById(It.IsAny<Notification>(), InvalidId));
+            _notificationRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Notification>(), InvalidId));
         }
 
-        [Fact] public void DeleteById_ValidId_Test()
+        [Fact] public async Task DeleteById_ValidId_Test()
         {
-            Notification deletedNotification = _notification1;
+            Notification deletedNotification = _notifications[0];
             deletedNotification.DeletedAt = DateTime.UtcNow;
             NotificationDto deletedNotificationDto = deletedNotification.ToDto(_mapper);
-            _notificationRepositoryMock.Setup(mock => mock.DeleteById(ValidNotificationId)).Returns(deletedNotification);
-            _notificationService.DeleteById(ValidNotificationId).Should().BeEquivalentTo(deletedNotificationDto);
-            _notificationRepositoryMock.Verify(mock => mock.DeleteById(ValidNotificationId));
+            _notificationRepositoryMock.Setup(mock => mock.DeleteByIdAsync(ValidNotificationId)).ReturnsAsync(deletedNotification);
+            (await _notificationService.DeleteByIdAsync(ValidNotificationId)).Should().BeEquivalentTo(deletedNotificationDto);
+            _notificationRepositoryMock.Verify(mock => mock.DeleteByIdAsync(ValidNotificationId));
         }
 
-        [Fact] public void DeleteById_InvalidId_Test()
+        [Fact] public async Task DeleteById_InvalidId_Test()
         {
-            _notificationRepositoryMock.Setup(mock => mock.DeleteById(InvalidId)).Throws(new ResourceNotFoundException(string.Format(NotificationNotFound, InvalidId)));
-            _notificationService.Invoking(service => service.DeleteById(InvalidId))
-                .Should().Throw<ResourceNotFoundException>()
+            _notificationRepositoryMock.Setup(mock => mock.DeleteByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(NotificationNotFound, InvalidId)));
+            await _notificationService.Invoking(service => service.DeleteByIdAsync(InvalidId))
+                .Should().ThrowAsync<ResourceNotFoundException>()
                 .WithMessage(string.Format(NotificationNotFound, InvalidId));
-            _notificationRepositoryMock.Verify(mock => mock.DeleteById(InvalidId));
+            _notificationRepositoryMock.Verify(mock => mock.DeleteByIdAsync(InvalidId));
         }
     }
 }

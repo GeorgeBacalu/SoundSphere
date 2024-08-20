@@ -16,74 +16,65 @@ namespace SoundSphere.Test.Integration.Services
     {
         private readonly DbFixture _dbFixture;
         private readonly IMapper _mapper;
-        private readonly Artist _artist1 = GetArtist1();
-        private readonly Artist _artist2 = GetArtist2();
-        private readonly Artist _newArtist = GetNewArtist();
-        private readonly List<Artist> _artists = GetArtists();
-        private readonly ArtistDto _artistDto1 = GetArtistDto1();
-        private readonly ArtistDto _artistDto2 = GetArtistDto2();
-        private readonly ArtistDto _newArtistDto = GetNewArtistDto();
-        private readonly List<ArtistDto> _artistDtos = GetArtistDtos();
 
         public ArtistServiceIntegrationTest(DbFixture dbFixture) => (_dbFixture, _mapper) = (dbFixture, new MapperConfiguration(config => config.AddProfile<AutoMapperProfile>()).CreateMapper());
 
-        private void Execute(Action<ArtistService, AppDbContext> action)
+        private async Task ExecuteAsync(Func<ArtistService, AppDbContext, Task> action)
         {
             using var context = _dbFixture.CreateContext();
             var artistService = new ArtistService(new ArtistRepository(context), _mapper);
-            using var transaction = context.Database.BeginTransaction();
-            context.Artists.AddRange(_artists);
-            context.SaveChanges();
-            action(artistService, context);
-            transaction.Rollback();
+            await using var transaction = await context.Database.BeginTransactionAsync();
+            await context.Artists.AddRangeAsync(_artists);
+            await context.SaveChangesAsync();
+            await action(artistService, context);
+            await transaction.RollbackAsync();
         }
 
-        [Fact] public void GetAll_Test() => Execute((artistService, context) => artistService.GetAll().Should().BeEquivalentTo(_artistDtos));
+        [Fact] public async Task GetAll_Test() => await ExecuteAsync(async (artistService, context) => (await artistService.GetAllAsync(_artistPayload)).Should().BeEquivalentTo(_artistDtosPagination));
 
-        [Fact] public void GetById_ValidId_Test() => Execute((artistService, context) => artistService.GetById(ValidArtistId).Should().BeEquivalentTo(_artistDto1));
+        [Fact] public async Task GetById_ValidId_Test() => await ExecuteAsync(async (artistService, context) => (await artistService.GetByIdAsync(ValidArtistId)).Should().BeEquivalentTo(_artistDtos[0]));
 
-        [Fact] public void GetById_InvalidId_Test() => Execute((artistService, context) => artistService
-            .Invoking(service => service.GetById(InvalidId))
-            .Should().Throw<ResourceNotFoundException>()
+        [Fact] public async Task GetById_InvalidId_Test() => await ExecuteAsync(async (artistService, context) => await artistService
+            .Invoking(service => service.GetByIdAsync(InvalidId))
+            .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(ArtistNotFound, InvalidId)));
 
-        [Fact] public void Add_Test() => Execute((artistService, context) =>
+        [Fact] public async Task Add_Test() => await ExecuteAsync(async (artistService, context) =>
         {
-            ArtistDto result = artistService.Add(_newArtistDto);
+            ArtistDto result = await artistService.AddAsync(_newArtistDto);
             context.Artists.Find(result.Id).Should().BeEquivalentTo(_newArtist, options => options.Excluding(album => album.Id).Excluding(album => album.CreatedAt).Excluding(album => album.UpdatedAt));
             result.Id.Should().NotBe(Guid.Empty);
             result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public void UpdateById_ValidId_Test() => Execute((artistService, context) =>
+        [Fact] public async Task UpdateById_ValidId_Test() => await ExecuteAsync(async (artistService, context) =>
         {
-            Artist updatedArtist = _artist1;
-            updatedArtist.Name = _artist2.Name;
-            updatedArtist.ImageUrl = _artist2.ImageUrl;
-            updatedArtist.Bio = _artist2.Bio;
-            updatedArtist.SimilarArtists = _artist2.SimilarArtists;
+            Artist updatedArtist = _artists[0];
+            updatedArtist.Name = _artists[1].Name;
+            updatedArtist.ImageUrl = _artists[1].ImageUrl;
+            updatedArtist.Bio = _artists[1].Bio;
             ArtistDto updatedArtistDto = updatedArtist.ToDto(_mapper);
-            ArtistDto result = artistService.UpdateById(_artistDto2, ValidArtistId);
+            ArtistDto result = await artistService.UpdateByIdAsync(_artistDtos[1], ValidArtistId);
             result.Should().BeEquivalentTo(updatedArtistDto, options => options.Excluding(artist => artist.UpdatedAt));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public void UpdateById_InvalidId_Test() => Execute((artistService, context) => artistService
-            .Invoking(service => service.UpdateById(_artistDto2, InvalidId))
-            .Should().Throw<ResourceNotFoundException>()
+        [Fact] public async Task UpdateById_InvalidId_Test() => await ExecuteAsync(async (artistService, context) => await artistService
+            .Invoking(service => service.UpdateByIdAsync(_artistDtos[1], InvalidId))
+            .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(ArtistNotFound, InvalidId)));
 
-        [Fact] public void DeleteById_ValidId_Test() => Execute((artistService, context) =>
+        [Fact] public async Task DeleteById_ValidId_Test() => await ExecuteAsync(async (artistService, context) =>
         {
-            ArtistDto result = artistService.DeleteById(ValidArtistId);
-            result.Should().BeEquivalentTo(_artistDto1, options => options.Excluding(artist => artist.DeletedAt));
+            ArtistDto result = await artistService.DeleteByIdAsync(ValidArtistId);
+            result.Should().BeEquivalentTo(_artistDtos[0], options => options.Excluding(artist => artist.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public void DeleteById_InvalidId_Test() => Execute((artistService, context) => artistService
-            .Invoking(service => service.DeleteById(InvalidId))
-            .Should().Throw<ResourceNotFoundException>()
+        [Fact] public async Task DeleteById_InvalidId_Test() => await ExecuteAsync(async (artistService, context) => await artistService
+            .Invoking(service => service.DeleteByIdAsync(InvalidId))
+            .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(ArtistNotFound, InvalidId)));
     }
 }

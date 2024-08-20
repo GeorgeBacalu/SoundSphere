@@ -14,59 +14,55 @@ namespace SoundSphere.Test.Unit.Controllers
     {
         private readonly Mock<INotificationService> _notificationServiceMock = new();
         private readonly NotificationController _notificationController;
-        private readonly NotificationDto _notificationDto1 = GetNotificationDto1();
-        private readonly NotificationDto _notificationDto2 = GetNotificationDto1();
-        private readonly NotificationDto _newNotificationDto = GetNewNotificationDto();
-        private readonly List<NotificationDto> _notificationDtos = GetNotificationDtos();
 
         public NotificationControllerTest() => _notificationController = new(_notificationServiceMock.Object);
 
-        [Fact] public void GetAll_Test()
+        [Fact] public async Task GetAll_Test()
         {
-            _notificationServiceMock.Setup(mock => mock.GetAll()).Returns(_notificationDtos);
-            OkObjectResult? result = _notificationController.GetAll() as OkObjectResult;
+            _notificationServiceMock.Setup(mock => mock.GetAllAsync(_notificationPayload)).ReturnsAsync(_notificationDtosPagination);
+            OkObjectResult? result = await _notificationController.GetAllAsync(_notificationPayload) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_notificationDtos);
+            result?.Value.Should().BeEquivalentTo(_notificationDtosPagination);
         }
 
-        [Fact] public void GetById_Test()
+        [Fact] public async Task GetById_Test()
         {
-            _notificationServiceMock.Setup(mock => mock.GetById(ValidNotificationId)).Returns(_notificationDto1);
-            OkObjectResult? result = _notificationController.GetById(ValidNotificationId) as OkObjectResult;
+            _notificationServiceMock.Setup(mock => mock.GetByIdAsync(ValidNotificationId)).ReturnsAsync(_notificationDtos[0]);
+            OkObjectResult? result = await _notificationController.GetByIdAsync(ValidNotificationId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result?.Value.Should().BeEquivalentTo(_notificationDto1);
+            result?.Value.Should().BeEquivalentTo(_notificationDtos[0]);
         }
 
-        [Fact] public void Add_Test()
+        [Fact] public async Task Add_Test()
         {
-            _notificationServiceMock.Setup(mock => mock.Add(It.IsAny<NotificationDto>())).Returns(_newNotificationDto);
-            CreatedResult? result = _notificationController.Add(_newNotificationDto) as CreatedResult;
+            _notificationServiceMock.Setup(mock => mock.AddAsync(It.IsAny<NotificationDto>())).ReturnsAsync(_newNotificationDto);
+            CreatedResult? result = await _notificationController.AddAsync(_newNotificationDto) as CreatedResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status201Created);
             result?.Value.Should().BeEquivalentTo(_newNotificationDto);
         }
 
-        [Fact] public void UpdateById_Test()
+        [Fact] public async Task UpdateById_Test()
         {
-            NotificationDto updatedNotificationDto = _notificationDto1;
-            updatedNotificationDto.Type = _notificationDto2.Type;
-            updatedNotificationDto.Message = _notificationDto2.Message;
-            updatedNotificationDto.IsRead = _notificationDto2.IsRead;
-            _notificationServiceMock.Setup(mock => mock.UpdateById(It.IsAny<NotificationDto>(), ValidNotificationId)).Returns(updatedNotificationDto);
-            OkObjectResult? result = _notificationController.UpdateById(_notificationDto2, ValidNotificationId) as OkObjectResult;
+            NotificationDto updatedNotificationDto = _notificationDtos[0];
+            updatedNotificationDto.Type = _notificationDtos[1].Type;
+            updatedNotificationDto.Message = _notificationDtos[1].Message;
+            updatedNotificationDto.IsRead = _notificationDtos[1].IsRead;
+            _notificationServiceMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<NotificationDto>(), ValidNotificationId)).ReturnsAsync(updatedNotificationDto);
+            OkObjectResult? result = await _notificationController.UpdateByIdAsync(_notificationDtos[1], ValidNotificationId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(updatedNotificationDto);
         }
 
-        [Fact] public void DeleteById_Test()
+        [Fact] public async Task DeleteById_Test()
         {
-            NotificationDto deletedNotificationDto = _notificationDto1;
+            NotificationDto deletedNotificationDto = _notificationDtos[0];
             deletedNotificationDto.DeletedAt = DateTime.UtcNow;
-            _notificationServiceMock.Setup(mock => mock.DeleteById(ValidNotificationId)).Returns(deletedNotificationDto);
-            OkObjectResult? result = _notificationController.DeleteById(ValidNotificationId) as OkObjectResult;
+            _notificationServiceMock.Setup(mock => mock.DeleteByIdAsync(ValidNotificationId)).ReturnsAsync(deletedNotificationDto);
+            OkObjectResult? result = await _notificationController.DeleteByIdAsync(ValidNotificationId) as OkObjectResult;
             result?.Should().NotBeNull();
             result?.StatusCode.Should().Be(StatusCodes.Status200OK);
             result?.Value.Should().BeEquivalentTo(deletedNotificationDto);

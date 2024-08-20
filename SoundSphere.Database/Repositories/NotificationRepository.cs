@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SoundSphere.Database.Context;
+using SoundSphere.Database.Dtos.Request.Pagination;
 using SoundSphere.Database.Entities;
+using SoundSphere.Database.Extensions;
 using SoundSphere.Database.Repositories.Interfaces;
 using SoundSphere.Infrastructure.Exceptions;
 using static SoundSphere.Database.Constants;
@@ -13,44 +15,44 @@ namespace SoundSphere.Database.Repositories
 
         public NotificationRepository(AppDbContext context) => _context = context;
 
-        public List<Notification> GetAll() => _context.Notifications
+        public async Task<List<Notification>> GetAllAsync(NotificationPaginationRequest payload) => await _context.Notifications
             .Include(notification => notification.Sender)
             .Include(notification => notification.Receiver)
             .Where(notification => notification.DeletedAt == null)
-            .OrderBy(notification => notification.CreatedAt)
-            .ToList();
+            .ApplyPagination(payload)
+            .ToListAsync();
 
-        public Notification GetById(Guid id) => _context.Notifications
+        public async Task<Notification> GetByIdAsync(Guid id) => await _context.Notifications
             .Include(notification => notification.Sender)
             .Include(notification => notification.Receiver)
             .Where(notification => notification.DeletedAt == null)
-            .SingleOrDefault(notification => notification.Id == id)
+            .SingleOrDefaultAsync(notification => notification.Id == id)
             ?? throw new ResourceNotFoundException(string.Format(NotificationNotFound, id));
 
-        public Notification Add(Notification notification)
+        public async Task<Notification> AddAsync(Notification notification)
         {
             _context.Notifications.Add(notification);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return notification;
         }
 
-        public Notification UpdateById(Notification notification, Guid id)
+        public async Task<Notification> UpdateByIdAsync(Notification notification, Guid id)
         {
-            Notification notificationToUpdate = GetById(id);
+            Notification notificationToUpdate = await GetByIdAsync(id);
             notificationToUpdate.Type = notification.Type;
             notificationToUpdate.Message = notification.Message;
             notificationToUpdate.IsRead = notification.IsRead;
             if (_context.Entry(notificationToUpdate).State == EntityState.Modified)
                 notificationToUpdate.UpdatedAt = DateTime.UtcNow;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return notificationToUpdate;
         }
 
-        public Notification DeleteById(Guid id)
+        public async Task<Notification> DeleteByIdAsync(Guid id)
         {
-            Notification notificationToDelete = GetById(id);
+            Notification notificationToDelete = await GetByIdAsync(id);
             notificationToDelete.DeletedAt = DateTime.UtcNow;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return notificationToDelete;
         }
 

@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SoundSphere.Database.Context;
+using SoundSphere.Database.Dtos.Request.Pagination;
 using SoundSphere.Database.Entities;
+using SoundSphere.Database.Extensions;
 using SoundSphere.Database.Repositories.Interfaces;
 using SoundSphere.Infrastructure.Exceptions;
 using static SoundSphere.Database.Constants;
@@ -13,27 +15,27 @@ namespace SoundSphere.Database.Repositories
 
         public UserRepository(AppDbContext context) => _context = context;
 
-        public List<User> GetAll() => _context.Users
+        public async Task<List<User>> GetAllAsync(UserPaginationRequest payload) => await _context.Users
             .Where(user => user.DeletedAt == null)
-            .OrderBy(user => user.CreatedAt)
-            .ToList();
+            .ApplyPagination(payload)
+            .ToListAsync();
 
-        public User GetById(Guid id) => _context.Users
+        public async Task<User> GetByIdAsync(Guid id) => await _context.Users
             .Where(user => user.DeletedAt == null)
-            .SingleOrDefault(user => user.Id == id)
+            .SingleOrDefaultAsync(user => user.Id == id)
             ?? throw new ResourceNotFoundException(string.Format(UserNotFound, id));
 
-        public User Add(User user)
+        public async Task<User> AddAsync(User user)
         {
             user.Password = "password";
             _context.Users.Add(user);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return user;
         }
 
-        public User UpdateById(User user, Guid id)
+        public async Task<User> UpdateByIdAsync(User user, Guid id)
         {
-            User userToUpdate = GetById(id);
+            User userToUpdate = await GetByIdAsync(id);
             userToUpdate.Name = user.Name;
             userToUpdate.Email = user.Email;
             userToUpdate.Phone = user.Phone;
@@ -43,15 +45,15 @@ namespace SoundSphere.Database.Repositories
             userToUpdate.Role = user.Role;
             if (_context.Entry(userToUpdate).State == EntityState.Modified)
                 userToUpdate.UpdatedAt = DateTime.UtcNow;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return userToUpdate;
         }
 
-        public User DeleteById(Guid id)
+        public async Task<User> DeleteByIdAsync(Guid id)
         {
-            User userToDelete = GetById(id);
+            User userToDelete = await GetByIdAsync(id);
             userToDelete.DeletedAt = DateTime.UtcNow;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return userToDelete;
         }
 

@@ -12,69 +12,64 @@ namespace SoundSphere.Test.Integration.Repositories
     public class FeedbackRepositoryIntegrationTest : IClassFixture<DbFixture>
     {
         private readonly DbFixture _dbFixture;
-        private readonly Feedback _feedback1 = GetFeedback1();
-        private readonly Feedback _feedback2 = GetFeedback2();
-        private readonly Feedback _newFeedback = GetNewFeedback();
-        private readonly List<Feedback> _feedbacks = GetFeedbacks();
-        private readonly List<User> _users = GetUsers();
 
         public FeedbackRepositoryIntegrationTest(DbFixture dbFixture) => _dbFixture = dbFixture;
 
-        private void Execute(Action<FeedbackRepository, AppDbContext> action)
+        private async Task ExecuteAsync(Func<FeedbackRepository, AppDbContext, Task> action)
         {
             using var context = _dbFixture.CreateContext();
             var feedbackRepository = new FeedbackRepository(context);
-            using var transaction = context.Database.BeginTransaction();
-            _dbFixture.TrackAndAddEntities(context, _users);
-            _dbFixture.TrackAndAddEntities(context, _feedbacks);
-            action(feedbackRepository, context);
-            transaction.Rollback();
+            await using var transaction = await context.Database.BeginTransactionAsync();
+            await _dbFixture.TrackAndAddAsync(context, _users);
+            await _dbFixture.TrackAndAddAsync(context, _feedbacks);
+            await action(feedbackRepository, context);
+            await transaction.RollbackAsync();
         }
 
-        [Fact] public void GetAll_Test() => Execute((feedbackRepository, context) => feedbackRepository.GetAll().Should().BeEquivalentTo(_feedbacks));
+        [Fact] public async Task GetAll_Test() => await ExecuteAsync(async (feedbackRepository, context) => (await feedbackRepository.GetAllAsync(_feedbackPayload)).Should().BeEquivalentTo(_feedbacksPagination));
 
-        [Fact] public void GetById_ValidId_Test() => Execute((feedbackRepository, context) => feedbackRepository.GetById(ValidFeedbackId).Should().BeEquivalentTo(_feedback1));
+        [Fact] public async Task GetById_ValidId_Test() => await ExecuteAsync(async (feedbackRepository, context) => (await feedbackRepository.GetByIdAsync(ValidFeedbackId)).Should().BeEquivalentTo(_feedbacks[0]));
 
-        [Fact] public void GetById_InvalidId_Test() => Execute((feedbackRepository, context) => feedbackRepository
-            .Invoking(repository => repository.GetById(InvalidId))
-            .Should().Throw<ResourceNotFoundException>()
+        [Fact] public async Task GetById_InvalidId_Test() => await ExecuteAsync(async (feedbackRepository, context) => await feedbackRepository
+            .Invoking(repository => repository.GetByIdAsync(InvalidId))
+            .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(FeedbackNotFound, InvalidId)));
 
-        [Fact] public void Add_Test() => Execute((feedbackRepository, context) =>
+        [Fact] public async Task Add_Test() => await ExecuteAsync(async (feedbackRepository, context) =>
         {
             feedbackRepository.LinkFeedbackToUser(_newFeedback);
-            Feedback result = feedbackRepository.Add(_newFeedback);
+            Feedback result = await feedbackRepository.AddAsync(_newFeedback);
             context.Feedbacks.Find(result.Id).Should().BeEquivalentTo(_newFeedback, options => options.Excluding(feedback => feedback.Id).Excluding(feedback => feedback.CreatedAt).Excluding(feedback => feedback.UpdatedAt));
             result.Id.Should().NotBe(Guid.Empty);
             result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public void UpdateById_ValidId_Test() => Execute((feedbackRepository, context) =>
+        [Fact] public async Task UpdateById_ValidId_Test() => await ExecuteAsync(async (feedbackRepository, context) =>
         {
-            Feedback updatedFeedback = _feedback1;
-            updatedFeedback.Type = _feedback2.Type;
-            updatedFeedback.Message = _feedback2.Message;
-            Feedback result = feedbackRepository.UpdateById(_feedback2, ValidFeedbackId);
+            Feedback updatedFeedback = _feedbacks[0];
+            updatedFeedback.Type = _feedbacks[1].Type;
+            updatedFeedback.Message = _feedbacks[1].Message;
+            Feedback result = await feedbackRepository.UpdateByIdAsync(_feedbacks[1], ValidFeedbackId);
             result.Should().BeEquivalentTo(updatedFeedback, options => options.Excluding(feedback => feedback.UpdatedAt));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public void UpdateById_InvalidId_Test() => Execute((feedbackRepository, context) => feedbackRepository
-            .Invoking(repository => repository.UpdateById(_feedback2, InvalidId))
-            .Should().Throw<ResourceNotFoundException>()
+        [Fact] public async Task UpdateById_InvalidId_Test() => await ExecuteAsync(async (feedbackRepository, context) => await feedbackRepository
+            .Invoking(repository => repository.UpdateByIdAsync(_feedbacks[1], InvalidId))
+            .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(FeedbackNotFound, InvalidId)));
 
-        [Fact] public void DeleteById_ValidId_Test() => Execute((feedbackRepository, context) =>
+        [Fact] public async Task DeleteById_ValidId_Test() => await ExecuteAsync(async (feedbackRepository, context) =>
         {
-            Feedback result = feedbackRepository.DeleteById(ValidFeedbackId);
-            result.Should().BeEquivalentTo(_feedback1, options => options.Excluding(feedback => feedback.DeletedAt));
+            Feedback result = await feedbackRepository.DeleteByIdAsync(ValidFeedbackId);
+            result.Should().BeEquivalentTo(_feedbacks[0], options => options.Excluding(feedback => feedback.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public void DeleteById_InvalidId_Test() => Execute((feedbackRepository, context) => feedbackRepository
-            .Invoking(repository => repository.DeleteById(InvalidId))
-            .Should().Throw<ResourceNotFoundException>()
+        [Fact] public async Task DeleteById_InvalidId_Test() => await ExecuteAsync(async (feedbackRepository, context) => await feedbackRepository
+            .Invoking(repository => repository.DeleteByIdAsync(InvalidId))
+            .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(FeedbackNotFound, InvalidId)));
     }
 }

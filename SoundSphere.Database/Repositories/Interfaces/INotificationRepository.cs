@@ -1,18 +1,19 @@
-﻿using SoundSphere.Database.Entities;
+﻿using SoundSphere.Database.Dtos.Request.Pagination;
+using SoundSphere.Database.Entities;
 
 namespace SoundSphere.Database.Repositories.Interfaces
 {
     public interface INotificationRepository
     {
-        List<Notification> GetAll();
+        Task<List<Notification>> GetAllAsync(NotificationPaginationRequest payload);
 
-        Notification GetById(Guid id);
+        Task<Notification> GetByIdAsync(Guid id);
 
-        Notification Add(Notification notification);
+        Task<Notification> AddAsync(Notification notification);
 
-        Notification UpdateById(Notification notification, Guid id);
+        Task<Notification> UpdateByIdAsync(Notification notification, Guid id);
 
-        Notification DeleteById(Guid id);
+        Task<Notification> DeleteByIdAsync(Guid id);
 
         void LinkNotificationToSender(Notification notification);
 

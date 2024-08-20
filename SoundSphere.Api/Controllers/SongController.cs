@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SoundSphere.Core.Services.Interfaces;
 using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Request.Pagination;
 using System.Net.Mime;
+using static SoundSphere.Database.Constants;
 
 namespace SoundSphere.Api.Controllers
 {
@@ -15,24 +17,25 @@ namespace SoundSphere.Api.Controllers
 
         public SongController(ISongService songService) => _songService = songService;
 
-        /// <summary>Get all songs</summary>
+        /// <summary>Get all songs with pagination rules</summary>
+        /// <param name="payload">Request body with songs pagination rules</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [HttpGet] public IActionResult GetAll() => Ok(_songService.GetAll());
+        [HttpPost("get")] public async Task<IActionResult> GetAllAsync(SongPaginationRequest payload) => Ok(await _songService.GetAllAsync(payload));
 
         /// <summary>Get song by ID</summary>
         /// <param name="id">Song fetching ID</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [HttpGet("{id}")] public IActionResult GetById(Guid id) => Ok(_songService.GetById(id));
+        [HttpGet("{id}")] public async Task<IActionResult> GetByIdAsync(Guid id) => Ok(await _songService.GetByIdAsync(id));
 
         /// <summary>Add song</summary>
         /// <param name="songDto">SongDTO to add</param>
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [HttpPost] public IActionResult Add(SongDto songDto)
+        [HttpPost] public async Task<IActionResult> AddAsync(SongDto songDto)
         {
-            SongDto addedSongDto = _songService.Add(songDto);
-            return CreatedAtAction(nameof(GetById), new { addedSongDto.Id }, addedSongDto);
+            SongDto addedSongDto = await _songService.AddAsync(songDto);
+            return Created($"{ApiSong}/{addedSongDto.Id}", addedSongDto);
         }
         /// <summary>Update song by ID</summary>
         /// <param name="songDto">SongDTO to update</param>
@@ -41,12 +44,12 @@ namespace SoundSphere.Api.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
 
-        [HttpPut("{id}")] public IActionResult UpdateById(SongDto songDto, Guid id) => Ok(_songService.UpdateById(songDto, id));
+        [HttpPut("{id}")] public async Task<IActionResult> UpdateByIdAsync(SongDto songDto, Guid id) => Ok(await _songService.UpdateByIdAsync(songDto, id));
 
         /// <summary>Soft delete song by ID</summary>
         /// <param name="id">Song deleting ID</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [HttpDelete("{id}")] public IActionResult DeleteById(Guid id) => Ok(_songService.DeleteById(id));
+        [HttpDelete("{id}")] public async Task<IActionResult> DeleteByIdAsync(Guid id) => Ok(await _songService.DeleteByIdAsync(id));
     }
 }

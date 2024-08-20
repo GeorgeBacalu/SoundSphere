@@ -1,18 +1,19 @@
-﻿using SoundSphere.Database.Entities;
+﻿using SoundSphere.Database.Dtos.Request.Pagination;
+using SoundSphere.Database.Entities;
 
 namespace SoundSphere.Database.Repositories.Interfaces
 {
     public interface IAlbumRepository
     {
-        List<Album> GetAll();
+        Task<List<Album>> GetAllAsync(AlbumPaginationRequest payload);
 
-        Album GetById(Guid id);
+        Task<Album> GetByIdAsync(Guid id);
 
-        Album Add(Album album);
+        Task<Album> AddAsync(Album album);
 
-        Album UpdateById(Album album, Guid id);
+        Task<Album> UpdateByIdAsync(Album album, Guid id);
 
-        Album DeleteById(Guid id);
+        Task<Album> DeleteByIdAsync(Guid id);
 
         void AddAlbumPair(Album album);
     }

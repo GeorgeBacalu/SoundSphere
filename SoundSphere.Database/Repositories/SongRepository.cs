@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SoundSphere.Database.Context;
+using SoundSphere.Database.Dtos.Request.Pagination;
 using SoundSphere.Database.Entities;
+using SoundSphere.Database.Extensions;
 using SoundSphere.Database.Repositories.Interfaces;
 using SoundSphere.Infrastructure.Exceptions;
 using static SoundSphere.Database.Constants;
@@ -13,32 +15,32 @@ namespace SoundSphere.Database.Repositories
 
         public SongRepository(AppDbContext context) => _context = context;
 
-        public List<Song> GetAll() => _context.Songs
+        public async Task<List<Song>> GetAllAsync(SongPaginationRequest payload) => await _context.Songs
             .Include(song => song.Album)
             .Include(song => song.Artists)
             .Include(song => song.SimilarSongs)
             .Where(song => song.DeletedAt == null)
-            .OrderBy(song => song.CreatedAt)
-            .ToList();
+            .ApplyPagination(payload)
+            .ToListAsync();
 
-        public Song GetById(Guid id) => _context.Songs
+        public async Task<Song> GetByIdAsync(Guid id) => await _context.Songs
             .Include(song => song.Album)
             .Include(song => song.Artists)
             .Include(song => song.SimilarSongs)
             .Where(song => song.DeletedAt == null)
-            .SingleOrDefault(song => song.Id == id)
+            .SingleOrDefaultAsync(song => song.Id == id)
             ?? throw new ResourceNotFoundException(string.Format(SongNotFound, id));
 
-        public Song Add(Song song)
+        public async Task<Song> AddAsync(Song song)
         {
             _context.Songs.Add(song);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return song;
         }
 
-        public Song UpdateById(Song song, Guid id)
+        public async Task<Song> UpdateByIdAsync(Song song, Guid id)
         {
-            Song songToUpdate = GetById(id);
+            Song songToUpdate = await GetByIdAsync(id);
             songToUpdate.Title = song.Title;
             songToUpdate.ImageUrl = song.ImageUrl;
             songToUpdate.Genre = song.Genre;
@@ -49,15 +51,15 @@ namespace SoundSphere.Database.Repositories
             songToUpdate.SimilarSongs = song.SimilarSongs;
             if (_context.Entry(songToUpdate).State == EntityState.Modified)
                 songToUpdate.UpdatedAt = DateTime.UtcNow;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return songToUpdate;
         }
 
-        public Song DeleteById(Guid id)
+        public async Task<Song> DeleteByIdAsync(Guid id)
         {
-            Song songToDelete = GetById(id);
+            Song songToDelete = await GetByIdAsync(id);
             songToDelete.DeletedAt = DateTime.UtcNow;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return songToDelete;
         }
 
