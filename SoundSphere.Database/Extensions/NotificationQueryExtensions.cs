@@ -27,7 +27,7 @@ namespace SoundSphere.Database.Extensions
         private static IQueryable<Notification> Sort(this IQueryable<Notification> query, NotificationPaginationRequest payload)
         {
             if (payload.SortCriteria == null || payload.SortCriteria.Count == 0)
-                return query;
+                return query.OrderBy(notification => notification.CreatedAt);
             var firstCriterion = payload.SortCriteria.First();
             var newQuery = firstCriterion.Key switch
             {

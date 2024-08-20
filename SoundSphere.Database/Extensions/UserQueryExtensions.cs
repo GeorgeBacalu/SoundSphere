@@ -26,7 +26,7 @@ namespace SoundSphere.Database.Extensions
         private static IQueryable<User> Sort(this IQueryable<User> query, UserPaginationRequest payload)
         {
             if (payload.SortCriteria == null || payload.SortCriteria.Count == 0)
-                return query;
+                return query.OrderBy(user => user.CreatedAt);
             var firstCriterion = payload.SortCriteria.First();
             var newQuery = firstCriterion.Key switch
             {

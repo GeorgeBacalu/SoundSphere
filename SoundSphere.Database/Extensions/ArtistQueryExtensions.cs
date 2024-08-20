@@ -23,7 +23,7 @@ namespace SoundSphere.Database.Extensions
         private static IQueryable<Artist> Sort(this IQueryable<Artist> query, ArtistPaginationRequest payload)
         {
             if (payload.SortCriteria == null || payload.SortCriteria.Count == 0)
-                return query;
+                return query.OrderBy(artist => artist.CreatedAt);
             var firstCriterion = payload.SortCriteria.First();
             var newQuery = firstCriterion.Key switch
             {

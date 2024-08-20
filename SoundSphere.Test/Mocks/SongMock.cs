@@ -1520,9 +1520,7 @@ namespace SoundSphere.Test.Mocks
             ReleaseDate = new DateOnly(2021, 5, 25),
             DurationSeconds = 194,
             Album = _albums[0],
-            Artists = [_artists[15]],
-            SimilarSongs = [new() { SongId = Guid.Parse("8b39efa4-ce8d-4617-84e7-45bf095c290a"), SimilarSongId = Guid.Parse("64f534f8-f2d4-4402-95a3-54de48b678a8") },
-                            new() { SongId = Guid.Parse("8b39efa4-ce8d-4617-84e7-45bf095c290a"), SimilarSongId = Guid.Parse("278cfa5a-6f44-420e-9930-07da6c43a6ad") }]
+            Artists = [_artists[15]]
         };
 
         public static readonly List<SongDto> _songDtos = _songs.Select(ToDto).ToList();

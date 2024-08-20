@@ -26,7 +26,7 @@ namespace SoundSphere.Database.Extensions
         private static IQueryable<Playlist> Sort(this IQueryable<Playlist> query, PlaylistPaginationRequest payload)
         {
             if (payload.SortCriteria == null || payload.SortCriteria.Count == 0)
-                return query;
+                return query.OrderBy(playlist => playlist.CreatedAt);
             var firstCriterion = payload.SortCriteria.First();
             var newQuery = firstCriterion.Key switch
             {

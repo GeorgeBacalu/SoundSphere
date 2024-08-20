@@ -26,7 +26,7 @@ namespace SoundSphere.Database.Extensions
         private static IQueryable<Feedback> Sort(this IQueryable<Feedback> query, FeedbackPaginationRequest payload)
         {
             if (payload.SortCriteria == null || payload.SortCriteria.Count == 0)
-                return query;
+                return query.OrderBy(feedback => feedback.CreatedAt);
             var firstCriterion = payload.SortCriteria.First();
             var newQuery = firstCriterion.Key switch
             {

@@ -564,9 +564,7 @@ namespace SoundSphere.Test.Mocks
         {
             Title = "Cold Mode",
             ImageUrl = "https://cold_mode.jpg",
-            ReleaseDate = new DateOnly(2023, 6, 18),
-            SimilarAlbums = [new() { AlbumId = Guid.Parse("8a145bd2-7b7f-4188-bcdd-1c3a4a7c5e45"), SimilarAlbumId = Guid.Parse("6ee76a77-2be4-42e3-8417-e60d282cffcb") },
-                             new() { AlbumId = Guid.Parse("8a145bd2-7b7f-4188-bcdd-1c3a4a7c5e45"), SimilarAlbumId = Guid.Parse("b58f5f3f-d5e8-49f3-8b12-cfe33f762b4f") }]
+            ReleaseDate = new DateOnly(2023, 6, 18)
         };
 
         public static readonly List<AlbumDto> _albumDtos = _albums.Select(ToDto).ToList();

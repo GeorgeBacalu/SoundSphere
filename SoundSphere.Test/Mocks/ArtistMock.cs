@@ -564,9 +564,7 @@ namespace SoundSphere.Test.Mocks
         {
             Name = "U2",
             ImageUrl = "https://u2.jpg",
-            Bio = "Irish rock band internationally acclaimed for their rock anthems and humanitarian efforts.",
-            SimilarArtists = [new() { ArtistId = Guid.Parse("b4e62a70-8b1d-4dd3-af8a-b44f6737fb22"), SimilarArtistId = Guid.Parse("4e75ecdd-aafe-4c35-836b-1b83fc7b8f88") },
-                              new() { ArtistId = Guid.Parse("b4e62a70-8b1d-4dd3-af8a-b44f6737fb22"), SimilarArtistId = Guid.Parse("8c301aa9-6d56-4c06-b1f2-9b9956979345") }]
+            Bio = "Irish rock band internationally acclaimed for their rock anthems and humanitarian efforts."
         };
 
         public static readonly List<ArtistDto> _artistDtos = _artists.Select(ToDto).ToList();
