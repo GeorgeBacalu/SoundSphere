@@ -1,21 +1,28 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SoundSphere.Core.Services;
 using SoundSphere.Core.Services.Interfaces;
 using SoundSphere.Database.Context;
 using SoundSphere.Database.Repositories;
 using SoundSphere.Database.Repositories.Interfaces;
+using SoundSphere.Infrastructure.Config;
 using SoundSphere.Infrastructure.Middlewares;
 using System.Reflection;
+using System.Text;
 
 public class Program
 {
     static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        AppConfig.Init(builder.Configuration);
         builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions => sqlOptions.MigrationsAssembly("SoundSphere.Api")));
-        builder.Services.AddControllers();
         builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(SoundSphere.Core.Mappings.AutoMapperProfile).Assembly);
+        builder.Services.AddControllers();
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddTransient<LoggingMiddleware>();
         builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
         builder.Services.AddScoped<IAlbumRepository, AlbumRepository>()
@@ -33,13 +40,51 @@ public class Program
                         .AddScoped<IPlaylistService, PlaylistService>()
                         .AddScoped<ISongService, SongService>()
                         .AddScoped<IUserService, UserService>();
-
-        builder.Services.AddEndpointsApiExplorer();
+        
         builder.Services.AddSwaggerGen(options =>
         {
             options.SwaggerDoc("v1", new OpenApiInfo { Title = "SoundSphere API", Description = "This is a sample REST API documentation for a music streaming service.", Version = "1.0" });
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Description = "JWT Authorization header using the Bearer scheme.",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.Http,
+                Scheme = "Bearer"
+            });
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+            { {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" },
+                    Scheme = "oauth2",
+                    Name = "Bearer",
+                    In = ParameterLocation.Header
+                }, new List<string>()
+            } });
             options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
         });
+        builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
+        {
+            options.SaveToken = true;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ClockSkew = TimeSpan.Zero,
+                ValidIssuer = AppConfig.JwtSettings.Issuer,
+                ValidAudience = AppConfig.JwtSettings.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AppConfig.JwtSettings.Secret))
+            };
+        });
+        builder.Services.AddAuthentication();
 
         var app = builder.Build();
         if (app.Environment.IsDevelopment())
@@ -49,6 +94,7 @@ public class Program
             ExecuteSql(app.Services, Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "Scripts", $"{Assembly.GetExecutingAssembly().GetName().Name}.sql"));
         }
         app.UseHttpsRedirection();
+        app.UseMiddleware<LoggingMiddleware>();
         app.UseMiddleware<ExceptionHandlingMiddleware>();
         app.UseAuthorization();
         app.MapControllers();
