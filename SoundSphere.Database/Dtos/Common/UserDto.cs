@@ -15,7 +15,7 @@ namespace SoundSphere.Database.Dtos.Common
         public string Email { get; set; } = null!;
 
         [Required(ErrorMessage = "Phone is required")]
-        [RegularExpression(@"^(00|\+?40|0)(7\d{2}|\d{2}[13]|[2-37]\d|8[02-9]|9[0-2])\s?\d{3}\s?\d{3}$", ErrorMessage = "Invalid mobile format")]
+        [RegularExpression(@"^(00|\+?40|0)(7\d{2}|\d{2}[13]|[2-37]\d|8[02-9]|9[0-2])\s?\d{3}\s?\d{3}$", ErrorMessage = "Invalid phone number format")]
         public string Phone { get; set; } = null!; // Phone format: 00/+40/0 + phone prefix + optional space + 3 digits (first part) + optional space + 3 digits (second part)
 
         [Required(ErrorMessage = "Address is required")]
