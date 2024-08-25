@@ -1592,7 +1592,7 @@ namespace SoundSphere.Test.Mocks
 
         public static readonly NotificationPaginationRequest _notificationPayload = new(SortCriteria: null, SearchCriteria: null, Type: null, Message: null, SenderName: null, IsRead: null, DateRange: null);
 
-        public static NotificationDto ToDto(Notification notification) => new()
+        private static NotificationDto ToDto(Notification notification) => new()
         {
             Id = notification.Id,
             SenderId = notification.SenderId,

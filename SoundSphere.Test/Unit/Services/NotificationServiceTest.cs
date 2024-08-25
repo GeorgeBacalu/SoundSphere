@@ -27,19 +27,19 @@ namespace SoundSphere.Test.Unit.Services
             _notificationService = new NotificationService(_notificationRepositoryMock.Object, _userRepositoryMock.Object, _mapper);
         }
 
-        [Fact] public async Task GetAll_Test()
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedNotifications()
         {
             _notificationRepositoryMock.Setup(mock => mock.GetAllAsync(_notificationPayload)).ReturnsAsync(_notificationsPagination);
             (await _notificationService.GetAllAsync(_notificationPayload)).Should().BeEquivalentTo(_notificationDtosPagination);
         }
 
-        [Fact] public async Task GetById_ValidId_Test()
+        [Fact] public async Task GetByIdAsync_ShouldReturnNotification_WhenNotificationIdIsValid()
         {
             _notificationRepositoryMock.Setup(mock => mock.GetByIdAsync(ValidNotificationId)).ReturnsAsync(_notifications[0]);
             (await _notificationService.GetByIdAsync(ValidNotificationId)).Should().BeEquivalentTo(_notificationDtos[0]);
         }
 
-        [Fact] public async Task GetById_InvalidId_Test()
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenNotificationIdIsInvalid()
         {
             _notificationRepositoryMock.Setup(mock => mock.GetByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(NotificationNotFound, InvalidId)));
             await _notificationService.Invoking(service => service.GetByIdAsync(InvalidId))
@@ -48,7 +48,7 @@ namespace SoundSphere.Test.Unit.Services
             _notificationRepositoryMock.Verify(mock => mock.GetByIdAsync(InvalidId));
         }
 
-        [Fact] public async Task Add_Test()
+        [Fact] public async Task AddAsync_ShouldAddNewNotification_WhenNotificationDtoIsValid()
         {
             _userRepositoryMock.Setup(mock => mock.GetByIdAsync(ValidUserId)).ReturnsAsync(_users[0]);
             _userRepositoryMock.Setup(mock => mock.GetByIdAsync(ValidUserId2)).ReturnsAsync(_users[1]);
@@ -57,7 +57,7 @@ namespace SoundSphere.Test.Unit.Services
             _notificationRepositoryMock.Verify(mock => mock.AddAsync(It.IsAny<Notification>()));
         }
 
-        [Fact] public async Task UpdateById_ValidId_Test()
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateNotification_WhenNotificationIdIsValid()
         {
             Notification updatedNotification = _notifications[0];
             updatedNotification.Type = _notifications[1].Type;
@@ -69,7 +69,7 @@ namespace SoundSphere.Test.Unit.Services
             _notificationRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Notification>(), ValidNotificationId));
         }
 
-        [Fact] public async Task UpdateById_InvalidId_Test()
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenNotificationIdIsInvalid()
         {
             _notificationRepositoryMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<Notification>(), InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(NotificationNotFound, InvalidId)));
             await _notificationService.Invoking(service => service.UpdateByIdAsync(_notificationDtos[1], InvalidId))
@@ -78,7 +78,7 @@ namespace SoundSphere.Test.Unit.Services
             _notificationRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Notification>(), InvalidId));
         }
 
-        [Fact] public async Task DeleteById_ValidId_Test()
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteNotification_WhenNotificationIdIsValid()
         {
             Notification deletedNotification = _notifications[0];
             deletedNotification.DeletedAt = DateTime.UtcNow;
@@ -88,7 +88,7 @@ namespace SoundSphere.Test.Unit.Services
             _notificationRepositoryMock.Verify(mock => mock.DeleteByIdAsync(ValidNotificationId));
         }
 
-        [Fact] public async Task DeleteById_InvalidId_Test()
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenNotificationIdIsInvalid()
         {
             _notificationRepositoryMock.Setup(mock => mock.DeleteByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(NotificationNotFound, InvalidId)));
             await _notificationService.Invoking(service => service.DeleteByIdAsync(InvalidId))

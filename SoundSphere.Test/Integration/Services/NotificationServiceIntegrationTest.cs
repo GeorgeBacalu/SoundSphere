@@ -31,25 +31,25 @@ namespace SoundSphere.Test.Integration.Services
             await transaction.RollbackAsync();
         }
 
-        [Fact] public async Task GetAll_Test() => await ExecuteAsync(async (notificationService, context) => (await notificationService.GetAllAsync(_notificationPayload)).Should().BeEquivalentTo(_notificationDtosPagination ));
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedNotifications() => await ExecuteAsync(async (notificationService, context) => (await notificationService.GetAllAsync(_notificationPayload)).Should().BeEquivalentTo(_notificationDtosPagination ));
 
-        [Fact] public async Task GetById_ValidId_Test() => await ExecuteAsync(async (notificationService, context) => (await notificationService.GetByIdAsync(ValidNotificationId)).Should().BeEquivalentTo(_notificationDtos[0]));
+        [Fact] public async Task GetByIdAsync_ShouldReturnNotification_WhenNotificationIdIsValid() => await ExecuteAsync(async (notificationService, context) => (await notificationService.GetByIdAsync(ValidNotificationId)).Should().BeEquivalentTo(_notificationDtos[0]));
 
-        [Fact] public async Task GetById_InvalidId_Test() => await ExecuteAsync(async (notificationService, context) => await notificationService
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenNotificationIdIsInvalid() => await ExecuteAsync(async (notificationService, context) => await notificationService
             .Invoking(service => service.GetByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(NotificationNotFound, InvalidId)));
 
-        [Fact] public async Task Add_Test() => await ExecuteAsync(async (notificationService, context) =>
+        [Fact] public async Task AddAsync_ShouldAddNewNotification_WhenNotificationDtoIsValid() => await ExecuteAsync(async (notificationService, context) =>
         {
             NotificationDto result = await notificationService.AddAsync(_newNotificationDto);
-            context.Notifications.Find(result.Id).Should().BeEquivalentTo(_newNotification, options => options.Excluding(notification => notification.Id).Excluding(notification => notification.CreatedAt).Excluding(notification => notification.UpdatedAt));
+            (await context.Notifications.FindAsync(result.Id)).Should().BeEquivalentTo(_newNotification, options => options.Excluding(notification => notification.Id).Excluding(notification => notification.CreatedAt).Excluding(notification => notification.UpdatedAt));
             result.Id.Should().NotBe(Guid.Empty);
             result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_ValidId_Test() => await ExecuteAsync(async (notificationService, context) =>
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateNotification_WhenNotificationIdIsValid() => await ExecuteAsync(async (notificationService, context) =>
         {
             Notification updatedNotification = _notifications[0];
             updatedNotification.Type = _notifications[1].Type;
@@ -61,19 +61,19 @@ namespace SoundSphere.Test.Integration.Services
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_InvalidId_Test() => await ExecuteAsync(async (notificationService, context) => await notificationService
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenNotificationIdIsInvalid() => await ExecuteAsync(async (notificationService, context) => await notificationService
             .Invoking(service => service.UpdateByIdAsync(_notificationDtos[1], InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(NotificationNotFound, InvalidId)));
 
-        [Fact] public async Task DeleteById_ValidId_Test() => await ExecuteAsync(async (notificationService, context) =>
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteNotification_WhenNotificationIdIsValid() => await ExecuteAsync(async (notificationService, context) =>
         {
             NotificationDto result = await notificationService.DeleteByIdAsync(ValidNotificationId);
             result.Should().BeEquivalentTo(_notificationDtos[0], options => options.Excluding(notification => notification.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task DeleteById_InvalidId_Test() => await ExecuteAsync(async (notificationService, context) => await notificationService
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenNotificationIdIsInvalid() => await ExecuteAsync(async (notificationService, context) => await notificationService
             .Invoking(service => service.DeleteByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(NotificationNotFound, InvalidId)));

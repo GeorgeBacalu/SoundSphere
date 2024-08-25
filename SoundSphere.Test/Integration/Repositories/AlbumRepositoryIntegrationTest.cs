@@ -25,16 +25,16 @@ namespace SoundSphere.Test.Integration.Repositories
             await transaction.RollbackAsync();
         }
 
-        [Fact] public async Task GetAll_Test() => await ExecuteAsync(async (albumRepository, context) => (await albumRepository.GetAllAsync(_albumPayload)).Should().BeEquivalentTo(_albumsPagination));
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedAlbums() => await ExecuteAsync(async (albumRepository, context) => (await albumRepository.GetAllAsync(_albumPayload)).Should().BeEquivalentTo(_albumsPagination));
 
-        [Fact] public async Task GetById_ValidId_Test() => await ExecuteAsync(async (albumRepository, context) => (await albumRepository.GetByIdAsync(ValidAlbumId)).Should().BeEquivalentTo(_albums[0], options => options.Excluding(album => album.SimilarAlbums)));
+        [Fact] public async Task GetByIdAsync_ShouldReturnAlbum_WhenAlbumIdIsValid() => await ExecuteAsync(async (albumRepository, context) => (await albumRepository.GetByIdAsync(ValidAlbumId)).Should().BeEquivalentTo(_albums[0], options => options.Excluding(album => album.SimilarAlbums)));
 
-        [Fact] public async Task GetById_InvalidId_Test() => await ExecuteAsync(async (albumRepository, context) => await albumRepository
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenAlbumIdIsInvalid() => await ExecuteAsync(async (albumRepository, context) => await albumRepository
             .Invoking(repository => repository.GetByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(AlbumNotFound, InvalidId)));
 
-        [Fact] public async Task Add_Test() => await ExecuteAsync(async (albumRepository, context) =>
+        [Fact] public async Task AddAsync_ShouldAddNewAlbum_WhenAlbumDtoIsValid() => await ExecuteAsync(async (albumRepository, context) =>
         {
             Album result = await albumRepository.AddAsync(_newAlbum);
             context.Albums.Find(result.Id).Should().BeEquivalentTo(_newAlbum, options => options.Excluding(album => album.Id).Excluding(album => album.CreatedAt).Excluding(album => album.UpdatedAt));
@@ -43,7 +43,7 @@ namespace SoundSphere.Test.Integration.Repositories
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_ValidId_Test() => await ExecuteAsync(async (albumRepository, context) =>
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateAlbum_WhenAlbumIdIsValid() => await ExecuteAsync(async (albumRepository, context) =>
         {
             Album updatedAlbum = _albums[0];
             updatedAlbum.Title = _albums[1].Title;
@@ -54,19 +54,19 @@ namespace SoundSphere.Test.Integration.Repositories
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_InvalidId_Test() => await ExecuteAsync(async (albumRepository, context) => await albumRepository
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenAlbumIdIsInvalid() => await ExecuteAsync(async (albumRepository, context) => await albumRepository
             .Invoking(repository => repository.UpdateByIdAsync(_albums[1], InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(AlbumNotFound, InvalidId)));
 
-        [Fact] public async Task DeleteById_ValidId_Test() => await ExecuteAsync(async (albumRepository, context) =>
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteAlbum_WhenAlbumIdIsValid() => await ExecuteAsync(async (albumRepository, context) =>
         {
             Album result = await albumRepository.DeleteByIdAsync(ValidAlbumId);
             result.Should().BeEquivalentTo(_albums[0], options => options.Excluding(album => album.DeletedAt).Excluding(album => album.SimilarAlbums));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task DeleteById_InvalidId_Test() => await ExecuteAsync(async (albumRepository, context) => await albumRepository
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenAlbumIdIsInvalid() => await ExecuteAsync(async (albumRepository, context) => await albumRepository
             .Invoking(repository => repository.DeleteByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(AlbumNotFound, InvalidId)));

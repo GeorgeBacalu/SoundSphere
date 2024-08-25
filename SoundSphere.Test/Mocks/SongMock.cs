@@ -1533,7 +1533,7 @@ namespace SoundSphere.Test.Mocks
 
         public static readonly SongPaginationRequest _songPayload = new(SortCriteria: null, SearchCriteria: null, Title: null, Genre: null, DateRange: null, DurationRange: null, AlbumTitle: null, ArtistName: null);
 
-        public static SongDto ToDto(Song song) => new()
+        private static SongDto ToDto(Song song) => new()
         {
             Id = song.Id,
             Title = song.Title,

@@ -35,25 +35,25 @@ namespace SoundSphere.Test.Integration.Services
             await transaction.RollbackAsync();
         }
 
-        [Fact] public async Task GetAll_Test() => await ExecuteAsync(async (playlistService, context) => (await playlistService.GetAllAsync(_playlistPayload)).Should().BeEquivalentTo(_playlistDtosPagination));
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedPlaylists() => await ExecuteAsync(async (playlistService, context) => (await playlistService.GetAllAsync(_playlistPayload)).Should().BeEquivalentTo(_playlistDtosPagination));
 
-        [Fact] public async Task GetById_ValidId_Test() => await ExecuteAsync(async (playlistService, context) => (await playlistService.GetByIdAsync(ValidPlaylistId)).Should().BeEquivalentTo(_playlistDtos[0]));
+        [Fact] public async Task GetByIdAsync_ShouldReturnPlaylist_WhenPlaylistIdIsValid() => await ExecuteAsync(async (playlistService, context) => (await playlistService.GetByIdAsync(ValidPlaylistId)).Should().BeEquivalentTo(_playlistDtos[0]));
 
-        [Fact] public async Task GetById_InvalidId_Test() => await ExecuteAsync(async (playlistService, context) => await playlistService
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenPlaylistIdIsInvalid() => await ExecuteAsync(async (playlistService, context) => await playlistService
             .Invoking(service => service.GetByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(PlaylistNotFound, InvalidId)));
 
-        [Fact] public async Task Add_Test() => await ExecuteAsync(async (playlistService, context) =>
+        [Fact] public async Task AddAsync_ShouldAddNewPlaylist_WhenPlaylistDtoIsValid() => await ExecuteAsync(async (playlistService, context) =>
         {
             PlaylistDto result = await playlistService.AddAsync(_newPlaylistDto);
-            context.Playlists.Find(result.Id).Should().BeEquivalentTo(_newPlaylist, options => options.Excluding(playlist => playlist.Id).Excluding(playlist => playlist.CreatedAt).Excluding(playlist => playlist.UpdatedAt));
+            (await context.Playlists.FindAsync(result.Id)).Should().BeEquivalentTo(_newPlaylist, options => options.Excluding(playlist => playlist.Id).Excluding(playlist => playlist.CreatedAt).Excluding(playlist => playlist.UpdatedAt));
             result.Id.Should().NotBe(Guid.Empty);
             result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_ValidId_Test() => await ExecuteAsync(async (playlistService, context) =>
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdatePlaylist_WhenPlaylistIdIsValid() => await ExecuteAsync(async (playlistService, context) =>
         {
             Playlist updatedPlaylist = _playlists[0];
             updatedPlaylist.Title = _playlists[1].Title;
@@ -63,19 +63,19 @@ namespace SoundSphere.Test.Integration.Services
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_InvalidId_Test() => await ExecuteAsync(async (playlistService, context) => await playlistService
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenPlaylistIdIsInvalid() => await ExecuteAsync(async (playlistService, context) => await playlistService
             .Invoking(service => service.UpdateByIdAsync(_playlistDtos[1], InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(PlaylistNotFound, InvalidId)));
 
-        [Fact] public async Task DeleteById_ValidId_Test() => await ExecuteAsync(async (playlistService, context) =>
+        [Fact] public async Task DeleteByIdAsync_ShouldDeletePlaylist_WhenPlaylistIdIsValid() => await ExecuteAsync(async (playlistService, context) =>
         {
             PlaylistDto result = await playlistService.DeleteByIdAsync(ValidPlaylistId);
             result.Should().BeEquivalentTo(_playlistDtos[0], options => options.Excluding(playlist => playlist.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task DeleteById_InvalidId_Test() => await ExecuteAsync(async (playlistService, context) => await playlistService
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenPlaylistIdIsInvalid() => await ExecuteAsync(async (playlistService, context) => await playlistService
             .Invoking(service => service.DeleteByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(PlaylistNotFound, InvalidId)));

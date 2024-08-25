@@ -577,7 +577,7 @@ namespace SoundSphere.Test.Mocks
 
         public static readonly AlbumPaginationRequest _albumPayload = new(SortCriteria: null, SearchCriteria: null, Title: null, DateRange: null);
 
-        public static AlbumDto ToDto(Album album) => new()
+        private static AlbumDto ToDto(Album album) => new()
         {
             Id = album.Id,
             Title = album.Title,

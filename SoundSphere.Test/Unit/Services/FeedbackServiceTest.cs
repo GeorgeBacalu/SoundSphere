@@ -27,19 +27,19 @@ namespace SoundSphere.Test.Unit.Services
             _feedbackService = new FeedbackService(_feedbackRepositoryMock.Object, _userRepositoryMock.Object, _mapper);
         }
 
-        [Fact] public async Task GetAll_Test()
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedFeedbacks()
         {
             _feedbackRepositoryMock.Setup(mock => mock.GetAllAsync(_feedbackPayload)).ReturnsAsync(_feedbacksPagination);
             (await _feedbackService.GetAllAsync(_feedbackPayload)).Should().BeEquivalentTo(_feedbackDtosPagination);
         }
 
-        [Fact] public async Task GetById_ValidId_Test()
+        [Fact] public async Task GetByIdAsync_ShouldReturnFeedback_WhenFeedbackIdIsValid()
         {
             _feedbackRepositoryMock.Setup(mock => mock.GetByIdAsync(ValidFeedbackId)).ReturnsAsync(_feedbacks[0]);
             (await _feedbackService.GetByIdAsync(ValidFeedbackId)).Should().BeEquivalentTo(_feedbackDtos[0]);
         }
 
-        [Fact] public async Task GetById_InvalidId_Test()
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenFeedbackIdIsInvalid()
         {
             _feedbackRepositoryMock.Setup(mock => mock.GetByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(FeedbackNotFound, InvalidId)));
             await _feedbackService.Invoking(service => service.GetByIdAsync(InvalidId))
@@ -48,7 +48,7 @@ namespace SoundSphere.Test.Unit.Services
             _feedbackRepositoryMock.Verify(mock => mock.GetByIdAsync(InvalidId));
         }
 
-        [Fact] public async Task Add_Test()
+        [Fact] public async Task AddAsync_ShouldAddNewFeedback_WhenFeedbackDtoIsValid()
         {
             _userRepositoryMock.Setup(mock => mock.GetByIdAsync(ValidUserId)).ReturnsAsync(_users[0]);
             _feedbackRepositoryMock.Setup(mock => mock.AddAsync(It.IsAny<Feedback>())).ReturnsAsync(_newFeedback);
@@ -56,7 +56,7 @@ namespace SoundSphere.Test.Unit.Services
             _feedbackRepositoryMock.Verify(mock => mock.AddAsync(It.IsAny<Feedback>()));
         }
 
-        [Fact] public async Task UpdateById_ValidId_Test()
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateFeedback_WhenFeedbackIdIsValid()
         {
             Feedback updatedFeedback = _feedbacks[0];
             updatedFeedback.Type = _feedbacks[1].Type;
@@ -67,7 +67,7 @@ namespace SoundSphere.Test.Unit.Services
             _feedbackRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Feedback>(), ValidFeedbackId));
         }
 
-        [Fact] public async Task UpdateById_InvalidId_Test()
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenFeedbackIdIsInvalid()
         {
             _feedbackRepositoryMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<Feedback>(), InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(FeedbackNotFound, InvalidId)));
             await _feedbackService.Invoking(service => service.UpdateByIdAsync(_feedbackDtos[1], InvalidId))
@@ -76,7 +76,7 @@ namespace SoundSphere.Test.Unit.Services
             _feedbackRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Feedback>(), InvalidId));
         }
 
-        [Fact] public async Task DeleteById_ValidId_Test()
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteFeedback_WhenFeedbackIdIsValid()
         {
             Feedback deletedFeedback = _feedbacks[0];
             deletedFeedback.DeletedAt = DateTime.UtcNow;
@@ -86,7 +86,7 @@ namespace SoundSphere.Test.Unit.Services
             _feedbackRepositoryMock.Verify(mock => mock.DeleteByIdAsync(ValidFeedbackId));
         }
 
-        [Fact] public async Task DeleteById_InvalidId_Test()
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenFeedbackIdIsInvalid()
         {
             _feedbackRepositoryMock.Setup(mock => mock.DeleteByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(FeedbackNotFound, InvalidId)));
             await _feedbackService.Invoking(service => service.DeleteByIdAsync(InvalidId))

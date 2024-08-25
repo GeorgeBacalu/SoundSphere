@@ -26,16 +26,16 @@ namespace SoundSphere.Test.Integration.Repositories
             await transaction.RollbackAsync();
         }
 
-        [Fact] public async Task GetAll_Test() => await ExecuteAsync(async (feedbackRepository, context) => (await feedbackRepository.GetAllAsync(_feedbackPayload)).Should().BeEquivalentTo(_feedbacksPagination));
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedFeedbacks() => await ExecuteAsync(async (feedbackRepository, context) => (await feedbackRepository.GetAllAsync(_feedbackPayload)).Should().BeEquivalentTo(_feedbacksPagination));
 
-        [Fact] public async Task GetById_ValidId_Test() => await ExecuteAsync(async (feedbackRepository, context) => (await feedbackRepository.GetByIdAsync(ValidFeedbackId)).Should().BeEquivalentTo(_feedbacks[0]));
+        [Fact] public async Task GetByIdAsync_ShouldReturnFeedback_WhenFeedbackIdIsValid() => await ExecuteAsync(async (feedbackRepository, context) => (await feedbackRepository.GetByIdAsync(ValidFeedbackId)).Should().BeEquivalentTo(_feedbacks[0]));
 
-        [Fact] public async Task GetById_InvalidId_Test() => await ExecuteAsync(async (feedbackRepository, context) => await feedbackRepository
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenFeedbackIdIsInvalid() => await ExecuteAsync(async (feedbackRepository, context) => await feedbackRepository
             .Invoking(repository => repository.GetByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(FeedbackNotFound, InvalidId)));
 
-        [Fact] public async Task Add_Test() => await ExecuteAsync(async (feedbackRepository, context) =>
+        [Fact] public async Task AddAsync_ShouldAddNewFeedback_WhenFeedbackDtoIsValid() => await ExecuteAsync(async (feedbackRepository, context) =>
         {
             feedbackRepository.LinkFeedbackToUser(_newFeedback);
             Feedback result = await feedbackRepository.AddAsync(_newFeedback);
@@ -45,7 +45,7 @@ namespace SoundSphere.Test.Integration.Repositories
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_ValidId_Test() => await ExecuteAsync(async (feedbackRepository, context) =>
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateFeedback_WhenFeedbackIdIsValid() => await ExecuteAsync(async (feedbackRepository, context) =>
         {
             Feedback updatedFeedback = _feedbacks[0];
             updatedFeedback.Type = _feedbacks[1].Type;
@@ -55,19 +55,19 @@ namespace SoundSphere.Test.Integration.Repositories
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_InvalidId_Test() => await ExecuteAsync(async (feedbackRepository, context) => await feedbackRepository
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenFeedbackIdIsInvalid() => await ExecuteAsync(async (feedbackRepository, context) => await feedbackRepository
             .Invoking(repository => repository.UpdateByIdAsync(_feedbacks[1], InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(FeedbackNotFound, InvalidId)));
 
-        [Fact] public async Task DeleteById_ValidId_Test() => await ExecuteAsync(async (feedbackRepository, context) =>
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteFeedback_WhenFeedbackIdIsValid() => await ExecuteAsync(async (feedbackRepository, context) =>
         {
             Feedback result = await feedbackRepository.DeleteByIdAsync(ValidFeedbackId);
             result.Should().BeEquivalentTo(_feedbacks[0], options => options.Excluding(feedback => feedback.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task DeleteById_InvalidId_Test() => await ExecuteAsync(async (feedbackRepository, context) => await feedbackRepository
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenFeedbackIdIsInvalid() => await ExecuteAsync(async (feedbackRepository, context) => await feedbackRepository
             .Invoking(repository => repository.DeleteByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(FeedbackNotFound, InvalidId)));

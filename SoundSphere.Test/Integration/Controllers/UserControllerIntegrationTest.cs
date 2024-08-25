@@ -2,8 +2,11 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using SoundSphere.Core.Services.Interfaces;
 using SoundSphere.Database.Context;
 using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Response;
+using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text;
 using static Newtonsoft.Json.JsonConvert;
@@ -26,16 +29,19 @@ namespace SoundSphere.Test.Integration.Controllers
         private async Task ExecuteAsync(Func<Task> action)
         {
             using var scope = _factory.Services.CreateScope();
+            var _userService = scope.ServiceProvider.GetRequiredService<IUserService>();
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            context.UsersArtists.RemoveRange(context.UsersArtists);
             context.Users.RemoveRange(context.Users);
-            await context.Users.AddRangeAsync(_users);
-            await context.SaveChangesAsync();
+            await _dbFixture.TrackAndAddAsync(context, _users);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _userService.GenerateToken(_users[0]));
             await action();
+            context.UsersArtists.RemoveRange(context.UsersArtists);
             context.Users.RemoveRange(context.Users);
             await context.SaveChangesAsync();
         }
 
-        [Fact] public async Task GetAll_Test() => await ExecuteAsync(async () =>
+        [Fact] public async Task GetAllAsync_ShouldReturnAllUsers_WhenUsersExist() => await ExecuteAsync(async () =>
         {
             var response = await _httpClient.PostAsync($"{ApiUser}/get", new StringContent(SerializeObject(_userPayload), Encoding.UTF8, MediaTypeNames.Application.Json));
             response.Should().NotBeNull();
@@ -44,7 +50,7 @@ namespace SoundSphere.Test.Integration.Controllers
             responseBody.Should().BeEquivalentTo(_userDtos);
         });
 
-        [Fact] public async Task GetById_ValidId_Test() => await ExecuteAsync(async () =>
+        [Fact] public async Task GetByIdAsync_ShouldReturnUser_WhenUserIdIsValid() => await ExecuteAsync(async () =>
         {
             var response = await _httpClient.GetAsync($"{ApiUser}/{ValidUserId}");
             response.Should().NotBeNull();
@@ -53,7 +59,7 @@ namespace SoundSphere.Test.Integration.Controllers
             responseBody.Should().BeEquivalentTo(_userDtos[0]);
         });
 
-        [Fact] public async Task GetById_InvalidId_Test() => await ExecuteAsync(async () =>
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenUserIdIsInvalid() => await ExecuteAsync(async () =>
         {
             var response = await _httpClient.GetAsync($"{ApiUser}/{InvalidId}");
             response.Should().NotBeNull();
@@ -62,22 +68,7 @@ namespace SoundSphere.Test.Integration.Controllers
             responseBody.Should().BeEquivalentTo(new ProblemDetails { Title = "Resource not found", Detail = string.Format(UserNotFound, InvalidId), Status = StatusCodes.Status404NotFound });
         });
 
-        [Fact] public async Task Add_Test() => await ExecuteAsync(async () =>
-        {
-            var addResponse = await _httpClient.PostAsync(ApiUser, new StringContent(SerializeObject(_newUserDto), Encoding.UTF8, MediaTypeNames.Application.Json));
-            addResponse.Should().NotBeNull();
-            addResponse.StatusCode.Should().Be(Created);
-            var addResponseBody = DeserializeObject<UserDto>(await addResponse.Content.ReadAsStringAsync());
-            addResponseBody.Should().BeEquivalentTo(_newUserDto, options => options.Excluding(user => user.Id).Excluding(user => user.CreatedAt).Excluding(user => user.UpdatedAt));
-
-            var getResponse = await _httpClient.GetAsync($"{ApiUser}/{addResponseBody?.Id}");
-            getResponse.Should().NotBeNull();
-            getResponse.StatusCode.Should().Be(OK);
-            var getResponseBody = DeserializeObject<UserDto>(await getResponse.Content.ReadAsStringAsync());
-            getResponseBody.Should().BeEquivalentTo(addResponseBody);
-        });
-
-        [Fact] public async Task UpdateById_ValidId_Test() => await ExecuteAsync(async () =>
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateUser_WhenUserIdIsValid() => await ExecuteAsync(async () =>
         {
             UserDto updatedUserDto = _userDtos[0];
             updatedUserDto.Name = _newUserDto.Name;
@@ -100,7 +91,7 @@ namespace SoundSphere.Test.Integration.Controllers
             getResponseBody.Should().BeEquivalentTo(updatedUserDto, options => options.Excluding(user => user.UpdatedAt));
         });
 
-        [Fact] public async Task UpdateById_InvalidId_Test() => await ExecuteAsync(async () =>
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenUserIdIsInvalid() => await ExecuteAsync(async () =>
         {
             var response = await _httpClient.PutAsync($"{ApiUser}/{InvalidId}", new StringContent(SerializeObject(_userDtos[1]), Encoding.UTF8, MediaTypeNames.Application.Json));
             response.Should().NotBeNull();
@@ -109,7 +100,7 @@ namespace SoundSphere.Test.Integration.Controllers
             responseBody.Should().BeEquivalentTo(new ProblemDetails { Title = "Resource not found", Detail = string.Format(UserNotFound, InvalidId), Status = StatusCodes.Status404NotFound });
         });
 
-        [Fact] public async Task DeleteById_ValidId_Test() => await ExecuteAsync(async () =>
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteUser_WhenUserIdIsValid() => await ExecuteAsync(async () =>
         {
             UserDto deletedUserDto = _userDtos[0];
             deletedUserDto.DeletedAt = DateTime.UtcNow;
@@ -126,13 +117,58 @@ namespace SoundSphere.Test.Integration.Controllers
             getResponseBody.Should().BeEquivalentTo(new ProblemDetails { Title = "Resource not found", Detail = string.Format(UserNotFound, ValidUserId), Status = StatusCodes.Status404NotFound });
         });
 
-        [Fact] public async Task DeleteById_InvalidId_Test() => await ExecuteAsync(async () =>
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenUserIdIsInvalid() => await ExecuteAsync(async () =>
         {
             var response = await _httpClient.DeleteAsync($"{ApiUser}/{InvalidId}");
             response.Should().NotBeNull();
             response.StatusCode.Should().Be(NotFound);
             var responseBody = DeserializeObject<ProblemDetails>(await response.Content.ReadAsStringAsync());
             responseBody.Should().BeEquivalentTo(new ProblemDetails { Title = "Resource not found", Detail = string.Format(UserNotFound, InvalidId), Status = StatusCodes.Status404NotFound });
+        });
+
+        [Fact] public async Task RegisterAsync_ShouldCreateNewUser_WhenUserDoesNotExist() => await ExecuteAsync(async () =>
+        {
+            var response = await _httpClient.PostAsync($"{ApiUser}/register", new StringContent(SerializeObject(_registerRequestNewUser), Encoding.UTF8, MediaTypeNames.Application.Json));
+            response.Should().NotBeNull();
+            response.StatusCode.Should().Be(Created);
+            var responseBody = DeserializeObject<UserDto>(await response.Content.ReadAsStringAsync());
+            responseBody.Should().BeEquivalentTo(_newUser, options => options.Excluding(user => user.Id).Excluding(user => user.CreatedAt).Excluding(user => user.UpdatedAt).Excluding(user => user.PasswordSalt).Excluding(user => user.PasswordHash).Excluding(user => user.UserArtists).Excluding(user => user.UserSongs));
+        });
+
+        [Fact] public async Task RegisterAsync_ShouldThrowException_WhenUserAlreadyExists() => await ExecuteAsync(async () =>
+        {
+            var response = await _httpClient.PostAsync($"{ApiUser}/register", new StringContent(SerializeObject(_registerRequestExistingUser), Encoding.UTF8, MediaTypeNames.Application.Json));
+            response.Should().NotBeNull();
+            response.StatusCode.Should().Be(BadRequest);
+            var responseBody = DeserializeObject<ProblemDetails>(await response.Content.ReadAsStringAsync());
+            responseBody.Should().BeEquivalentTo(new ProblemDetails { Title = "Invalid request", Detail = UserAlreadyExists, Status = StatusCodes.Status400BadRequest });
+        });
+
+        [Fact] public async Task LoginAsync_ShouldReturnToken_WhenExistingUserLogsIn() => await ExecuteAsync(async () =>
+        {
+            var response = await _httpClient.PostAsync($"{ApiUser}/login", new StringContent(SerializeObject(_loginRequestExistingUser), Encoding.UTF8, MediaTypeNames.Application.Json));
+            response.Should().NotBeNull();
+            response.StatusCode.Should().Be(OK);
+            var responseBody = DeserializeObject<LoginResponse>(await response.Content.ReadAsStringAsync());
+            responseBody?.Token.Should().NotBeNullOrEmpty();
+        });
+
+        [Fact] public async Task LoginAsync_ShouldThrowException_WhenNewUserTriesToLogin() => await ExecuteAsync(async () =>
+        {
+            var response = await _httpClient.PostAsync($"{ApiUser}/login", new StringContent(SerializeObject(_loginRequestNewUser), Encoding.UTF8, MediaTypeNames.Application.Json));
+            response.Should().NotBeNull();
+            response.StatusCode.Should().Be(NotFound);
+            var responseBody = DeserializeObject<ProblemDetails>(await response.Content.ReadAsStringAsync());
+            responseBody.Should().BeEquivalentTo(new ProblemDetails { Title = "Resource not found", Detail = string.Format(UserEmailNotFound, _loginRequestNewUser.Email), Status = StatusCodes.Status404NotFound });
+        });
+
+        [Fact] public async Task LoginAsync_ShouldThrowException_WhenPasswordIsInvalid() => await ExecuteAsync(async () =>
+        {
+            var response = await _httpClient.PostAsync($"{ApiUser}/login", new StringContent(SerializeObject(_loginRequestInvalidPassword), Encoding.UTF8, MediaTypeNames.Application.Json));
+            response.Should().NotBeNull();
+            response.StatusCode.Should().Be(BadRequest);
+            var responseBody = DeserializeObject<ProblemDetails>(await response.Content.ReadAsStringAsync());
+            responseBody.Should().BeEquivalentTo(new ProblemDetails { Title = "Invalid request", Detail = InvalidPassword, Status = StatusCodes.Status400BadRequest });
         });
     }
 }

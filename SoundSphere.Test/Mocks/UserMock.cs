@@ -1,4 +1,5 @@
 ﻿using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Request.Auth;
 using SoundSphere.Database.Dtos.Request.Pagination;
 using SoundSphere.Database.Entities;
 
@@ -14,7 +15,7 @@ namespace SoundSphere.Test.Mocks
             Name = "John Doe",
             Email = "john.doe@email.com",
             PasswordSalt = "8N2aeuESLAW/U7ugfotVkA==",
-            PasswordHash = "2BQB4efoBi4Z5VldE8ErF0qQ47NvO9+0hF0al7PmJ24=",
+            PasswordHash = "AkmSMNAPjoQq/7bYBGYVbzbwObXN4tbyjdejlaQ60bk=",
             Phone = "+40721543701",
             Address = "123 Main St, Boston, USA",
             Birthday = new DateOnly(1980, 2, 15),
@@ -183,7 +184,35 @@ namespace SoundSphere.Test.Mocks
 
         public static readonly UserPaginationRequest _userPayload = new(SortCriteria: null, SeachCriteria: null, Name: null, Email: null, DateRange: null, Role: null);
 
-        public static UserDto ToDto(User user) => new()
+        public static readonly RegisterRequest _registerRequestNewUser = new(
+            Name: "Olivia Martinez",
+            Email: "olivia.martinez@email.com",
+            Password: "Olivia_Martinez_Password0!",
+            Phone: "+40723145611",
+            Address: "777 Oak St, Tokyo, Japan",
+            Birthday: new DateOnly(1999, 10, 17),
+            ImageUrl: "https://olivia_martinez.jpg",
+            Role: Role.Listener);
+
+        public static readonly RegisterRequest _registerRequestExistingUser = new(
+            Name: "John Doe",
+            Email: "john.doe@email.com",
+            Password: "John_Doe_Password0!",
+            Phone: "+40721543701",
+            Address: "123 Main St, Boston, USA",
+            Birthday: new DateOnly(1980, 2, 15),
+            ImageUrl: "https://john_doe.jpg",
+            Role: Role.Admin);
+
+        public static readonly LoginRequest _loginRequestExistingUser = new(Email: "john.doe@email.com", Password: "John_Doe_Password0!");
+
+        public static readonly LoginRequest _loginRequestNewUser = new(Email: "olivia.martinez@email.com", Password: "Olivia_Martinez_Password0!");
+
+        public static readonly LoginRequest _loginRequestInvalidPassword = new(Email: "john.doe@email.com", Password: "John_Doe_Password1!");
+
+        public static readonly string _token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMTg0NDQzYy1iMjE2LTRmYjYtODM1YS1jNGI2ZjM2NzFlZjYiLCJyb2xlIjoiQWRtaW4iLCJuYmYiOjE3MjQ0Mzk4MDcsImV4cCI6MTcyNDQ0MTYwNywiaWF0IjoxNzI0NDM5ODA3LCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo3MTQ2LyIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDIwMC8ifQ.Mb_-FCA0FXY01M3bnDK4LeEqF25kLrIjkktsBRLx-_I";
+
+        private static UserDto ToDto(User user) => new()
         {
             Id = user.Id,
             Name = user.Name,

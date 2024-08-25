@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using SoundSphere.Core.Services.Interfaces;
 using SoundSphere.Database.Context;
 using SoundSphere.Database.Dtos.Common;
+using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text;
 using static Newtonsoft.Json.JsonConvert;
@@ -11,6 +13,7 @@ using static SoundSphere.Database.Constants;
 using static SoundSphere.Test.Mocks.AlbumMock;
 using static SoundSphere.Test.Mocks.ArtistMock;
 using static SoundSphere.Test.Mocks.SongMock;
+using static SoundSphere.Test.Mocks.UserMock;
 using static System.Net.HttpStatusCode;
 
 namespace SoundSphere.Test.Integration.Controllers
@@ -28,6 +31,7 @@ namespace SoundSphere.Test.Integration.Controllers
         private async Task ExecuteAsync(Func<Task> action)
         {
             using var scope = _factory.Services.CreateScope();
+            var _userService = scope.ServiceProvider.GetRequiredService<IUserService>();
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             context.Albums.RemoveRange(context.Albums);
             context.Artists.RemoveRange(context.Artists);
@@ -36,7 +40,7 @@ namespace SoundSphere.Test.Integration.Controllers
             await _dbFixture.TrackAndAddAsync(context, _albums);
             await _dbFixture.TrackAndAddAsync(context, _artists);
             await _dbFixture.TrackAndAddAsync(context, _songs);
-            await context.SaveChangesAsync();
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _userService.GenerateToken(_users[0]));
             await action();
             context.Albums.RemoveRange(context.Albums);
             context.Artists.RemoveRange(context.Artists);
@@ -45,7 +49,7 @@ namespace SoundSphere.Test.Integration.Controllers
             await context.SaveChangesAsync();
         }
 
-        [Fact] public async Task GetAll_Test() => await ExecuteAsync(async () =>
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedSongs() => await ExecuteAsync(async () =>
         {
             var response = await _httpClient.PostAsync($"{ApiSong}/get", new StringContent(SerializeObject(_songPayload), Encoding.UTF8, MediaTypeNames.Application.Json));
             response.Should().NotBeNull();
@@ -54,7 +58,7 @@ namespace SoundSphere.Test.Integration.Controllers
             responseBody.Should().BeEquivalentTo(_songDtosPagination, options => options.Excluding(song => song.ArtistsIds).Excluding(song => song.SimilarSongsIds));
         });
 
-        [Fact] public async Task GetById_ValidId_Test() => await ExecuteAsync(async () =>
+        [Fact] public async Task GetByIdAsync_ShouldReturnSong_WhenSongIdIsValid() => await ExecuteAsync(async () =>
         {
             var response = await _httpClient.GetAsync($"{ApiSong}/{ValidSongId}");
             response.Should().NotBeNull();
@@ -63,7 +67,7 @@ namespace SoundSphere.Test.Integration.Controllers
             responseBody.Should().BeEquivalentTo(_songDtos[0], options => options.Excluding(song => song.ArtistsIds).Excluding(song => song.SimilarSongsIds));
         });
 
-        [Fact] public async Task GetById_InvalidId_Test() => await ExecuteAsync(async () =>
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenSongIdIsInvalid() => await ExecuteAsync(async () =>
         {
             var response = await _httpClient.GetAsync($"{ApiSong}/{InvalidId}");
             response.Should().NotBeNull();
@@ -72,7 +76,7 @@ namespace SoundSphere.Test.Integration.Controllers
             responseBody.Should().BeEquivalentTo(new ProblemDetails { Title = "Resource not found", Detail = string.Format(SongNotFound, InvalidId), Status = StatusCodes.Status404NotFound });
         });
 
-        [Fact] public async Task Add_Test() => await ExecuteAsync(async () =>
+        [Fact] public async Task AddAsync_ShouldAddNewSong_WhenSongDtoIsValid() => await ExecuteAsync(async () =>
         {
             var addResponse = await _httpClient.PostAsync(ApiSong, new StringContent(SerializeObject(_newSongDto), Encoding.UTF8, MediaTypeNames.Application.Json));
             addResponse.Should().NotBeNull();
@@ -87,7 +91,7 @@ namespace SoundSphere.Test.Integration.Controllers
             getResponseBody.Should().BeEquivalentTo(addResponseBody);
         });
 
-        [Fact] public async Task UpdateById_ValidId_Test() => await ExecuteAsync(async () =>
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateSong_WhenSongIdIsValid() => await ExecuteAsync(async () =>
         {
             SongDto updatedSongDto = _songDtos[0];
             updatedSongDto.Title = _songDtos[1].Title;
@@ -111,7 +115,7 @@ namespace SoundSphere.Test.Integration.Controllers
             getResponseBody.Should().BeEquivalentTo(updatedSongDto, options => options.Excluding(song => song.UpdatedAt));
         });
 
-        [Fact] public async Task UpdateById_InvalidId_Test() => await ExecuteAsync(async () =>
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenSongIdIsInvalid() => await ExecuteAsync(async () =>
         {
             var response = await _httpClient.PutAsync($"{ApiSong}/{InvalidId}", new StringContent(SerializeObject(_songDtos[1]), Encoding.UTF8, MediaTypeNames.Application.Json));
             response.Should().NotBeNull();
@@ -120,7 +124,7 @@ namespace SoundSphere.Test.Integration.Controllers
             responseBody.Should().BeEquivalentTo(new ProblemDetails { Title = "Resource not found", Detail = string.Format(SongNotFound, InvalidId), Status = StatusCodes.Status404NotFound });
         });
 
-        [Fact] public async Task DeleteById_ValidId_Test() => await ExecuteAsync(async () =>
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteSong_WhenSongIdIsValid() => await ExecuteAsync(async () =>
         {
             SongDto deletedSongDto = _songDtos[0];
             deletedSongDto.DeletedAt = DateTime.UtcNow;
@@ -137,7 +141,7 @@ namespace SoundSphere.Test.Integration.Controllers
             getResponseBody.Should().BeEquivalentTo(new ProblemDetails { Title = "Resource not found", Detail = string.Format(SongNotFound, ValidSongId), Status = StatusCodes.Status404NotFound });
         });
 
-        [Fact] public async Task DeleteById_InvalidId_Test() => await ExecuteAsync(async () =>
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenSongIdIsInvalid() => await ExecuteAsync(async () =>
         {
             var response = await _httpClient.DeleteAsync($"{ApiSong}/{InvalidId}");
             response.Should().NotBeNull();

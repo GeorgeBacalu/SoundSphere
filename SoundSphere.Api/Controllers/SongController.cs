@@ -1,17 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SoundSphere.Core.Services.Interfaces;
 using SoundSphere.Database.Dtos.Common;
 using SoundSphere.Database.Dtos.Request.Pagination;
-using System.Net.Mime;
 using static SoundSphere.Database.Constants;
 
 namespace SoundSphere.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
-    [ApiController]
-    [Produces(MediaTypeNames.Application.Json)]
-    [Consumes(MediaTypeNames.Application.Json)]
-    public class SongController : ControllerBase
+    public class SongController : BaseController
     {
         private readonly ISongService _songService;
 
@@ -32,6 +30,7 @@ namespace SoundSphere.Api.Controllers
         /// <param name="songDto">SongDTO to add</param>
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin, Moderator")]
         [HttpPost] public async Task<IActionResult> AddAsync(SongDto songDto)
         {
             SongDto addedSongDto = await _songService.AddAsync(songDto);
@@ -43,6 +42,7 @@ namespace SoundSphere.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin, Moderator")]
 
         [HttpPut("{id}")] public async Task<IActionResult> UpdateByIdAsync(SongDto songDto, Guid id) => Ok(await _songService.UpdateByIdAsync(songDto, id));
 
@@ -50,6 +50,7 @@ namespace SoundSphere.Api.Controllers
         /// <param name="id">Song deleting ID</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")] public async Task<IActionResult> DeleteByIdAsync(Guid id) => Ok(await _songService.DeleteByIdAsync(id));
     }
 }

@@ -12,6 +12,10 @@
         public static readonly string SongNotFound = "Song with id {0} not found";
         public static readonly string UserNotFound = "User with id {0} not found";
 
+        public static readonly string UserAlreadyExists = "User with this name, email, or phone already exists";
+        public static readonly string UserEmailNotFound = "User with email {0} not found";
+        public static readonly string InvalidPassword = "Invalid password";
+
         public static readonly Guid ValidAlbumId = Guid.Parse("6ee76a77-2be4-42e3-8417-e60d282cffcb");
         public static readonly Guid ValidArtistId = Guid.Parse("4e75ecdd-aafe-4c35-836b-1b83fc7b8f88");
         public static readonly Guid ValidFeedbackId = Guid.Parse("83061e8c-3403-441a-8be5-867ed1f4a86b");

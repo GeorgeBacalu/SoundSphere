@@ -24,31 +24,30 @@ namespace SoundSphere.Test.Integration.Services
             using var context = _dbFixture.CreateContext();
             var albumService = new AlbumService(new AlbumRepository(context), _mapper);
             await using var transaction = await context.Database.BeginTransactionAsync();
-            await context.Albums.AddRangeAsync(_albums);
-            await context.SaveChangesAsync();
+            await _dbFixture.TrackAndAddAsync(context, _albums);
             await action(albumService, context);
             await transaction.RollbackAsync();
         }
 
-        [Fact] public async Task GetAll_Test() => await ExecuteAsync(async (albumService, context) => (await albumService.GetAllAsync(_albumPayload)).Should().BeEquivalentTo(_albumDtosPagination));
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedAlbums() => await ExecuteAsync(async (albumService, context) => (await albumService.GetAllAsync(_albumPayload)).Should().BeEquivalentTo(_albumDtosPagination));
 
-        [Fact] public async Task GetById_ValidId_Test() => await ExecuteAsync(async (albumService, context) => (await albumService.GetByIdAsync(ValidAlbumId)).Should().BeEquivalentTo(_albumDtos[0]));
+        [Fact] public async Task GetByIdAsync_ShouldReturnAlbum_WhenAlbumIdIsValid() => await ExecuteAsync(async (albumService, context) => (await albumService.GetByIdAsync(ValidAlbumId)).Should().BeEquivalentTo(_albumDtos[0]));
 
-        [Fact] public async Task GetById_InvalidId_Test() => await ExecuteAsync(async (albumService, context) => await albumService
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenAlbumIdIsInvalid() => await ExecuteAsync(async (albumService, context) => await albumService
             .Invoking(service => service.GetByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(AlbumNotFound, InvalidId)));
 
-        [Fact] public async Task Add_Test() => await ExecuteAsync(async (albumService, context) =>
+        [Fact] public async Task AddAsync_ShouldAddNewAlbum_WhenAlbumDtoIsValid() => await ExecuteAsync(async (albumService, context) =>
         {
             AlbumDto result = await albumService.AddAsync(_newAlbumDto);
-            context.Albums.Find(result.Id).Should().BeEquivalentTo(_newAlbum, options => options.Excluding(album => album.Id).Excluding(album => album.CreatedAt).Excluding(album => album.UpdatedAt));
+            (await context.Albums.FindAsync(result.Id)).Should().BeEquivalentTo(_newAlbum, options => options.Excluding(album => album.Id).Excluding(album => album.CreatedAt).Excluding(album => album.UpdatedAt));
             result.Id.Should().NotBe(Guid.Empty);
             result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_ValidId_Test() => await ExecuteAsync(async (albumService, context) =>
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateAlbum_WhenAlbumIdIsValid() => await ExecuteAsync(async (albumService, context) =>
         {
             Album updatedAlbum = _albums[0];
             updatedAlbum.Title = _albums[1].Title;
@@ -56,23 +55,23 @@ namespace SoundSphere.Test.Integration.Services
             updatedAlbum.ReleaseDate = _albums[1].ReleaseDate;
             AlbumDto updatedAlbumDto = updatedAlbum.ToDto(_mapper);
             AlbumDto result = await albumService.UpdateByIdAsync(_albumDtos[1], ValidAlbumId);
-            result.Should().BeEquivalentTo(updatedAlbumDto, options => options.Excluding(album => album.UpdatedAt));
+            result.Should().BeEquivalentTo(updatedAlbumDto, options => options.Excluding(album => album.UpdatedAt).Excluding(album => album.SimilarAlbumsIds));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_InvalidId_Test() => await ExecuteAsync(async (albumService, context) => await albumService
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenAlbumIdIsInvalid() => await ExecuteAsync(async (albumService, context) => await albumService
             .Invoking(service => service.UpdateByIdAsync(_albumDtos[1], InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(AlbumNotFound, InvalidId)));
 
-        [Fact] public async Task DeleteById_ValidId_Test() => await ExecuteAsync(async (albumService, context) =>
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteAlbum_WhenAlbumIdIsValid() => await ExecuteAsync(async (albumService, context) =>
         {
             AlbumDto result = await albumService.DeleteByIdAsync(ValidAlbumId);
             result.Should().BeEquivalentTo(_albumDtos[0], options => options.Excluding(album => album.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task DeleteById_InvalidId_Test() => await ExecuteAsync(async (albumService, context) => await albumService
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenAlbumIdIsInvalid() => await ExecuteAsync(async (albumService, context) => await albumService
             .Invoking(service => service.DeleteByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(AlbumNotFound, InvalidId)));

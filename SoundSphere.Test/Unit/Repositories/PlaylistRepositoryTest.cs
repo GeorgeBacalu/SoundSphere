@@ -28,16 +28,16 @@ namespace SoundSphere.Test.Unit.Repositories
             _playlistRepository = new PlaylistRepository(_dbContextMock.Object);
         }
 
-        [Fact] public async Task GetAll_Test() => (await _playlistRepository.GetAllAsync(_playlistPayload)).Should().BeEquivalentTo(_playlistsPagination);
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedPlaylists() => (await _playlistRepository.GetAllAsync(_playlistPayload)).Should().BeEquivalentTo(_playlistsPagination);
 
-        [Fact] public async Task GetById_ValidId_Test() => (await _playlistRepository.GetByIdAsync(ValidPlaylistId)).Should().BeEquivalentTo(_playlists[0]);
+        [Fact] public async Task GetByIdAsync_ShouldReturnPlaylist_WhenPlaylistIdIsValid() => (await _playlistRepository.GetByIdAsync(ValidPlaylistId)).Should().BeEquivalentTo(_playlists[0]);
 
-        [Fact] public async Task GetById_InvalidId_Test() => await _playlistRepository
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenPlaylistIdIsInvalid() => await _playlistRepository
             .Invoking(repository => repository.GetByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(PlaylistNotFound, InvalidId));
 
-        [Fact] public async Task Add_Test()
+        [Fact] public async Task AddAsync_ShouldAddNewPlaylist_WhenPlaylistDtoIsValid()
         {
             Playlist result = await _playlistRepository.AddAsync(_newPlaylist);
             result.Should().BeEquivalentTo(_newPlaylist, options => options.Excluding(playlist => playlist.Id).Excluding(playlist => playlist.CreatedAt).Excluding(playlist => playlist.UpdatedAt));
@@ -47,7 +47,7 @@ namespace SoundSphere.Test.Unit.Repositories
             _dbContextMock.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()));
         }
 
-        [Fact] public async Task UpdateById_ValidId_Test()
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdatePlaylist_WhenPlaylistIdIsValid()
         {
             Mock<CustomEntityEntry<Playlist>> entryMock = new();
             entryMock.SetupProperty(mock => mock.State, EntityState.Modified);
@@ -60,12 +60,12 @@ namespace SoundSphere.Test.Unit.Repositories
             _dbContextMock.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()));
         }
 
-        [Fact] public async Task UpdateById_InvalidId_Test() => await _playlistRepository
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenPlaylistIdIsInvalid() => await _playlistRepository
             .Invoking(repository => repository.UpdateByIdAsync(_playlists[1], InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(PlaylistNotFound, InvalidId));
 
-        [Fact] public async Task DeleteById_ValidId_Test()
+        [Fact] public async Task DeleteByIdAsync_ShouldDeletePlaylist_WhenPlaylistIdIsValid()
         {
             Playlist result = await _playlistRepository.DeleteByIdAsync(ValidPlaylistId);
             result.Should().BeEquivalentTo(_playlists[0], options => options.Excluding(playlist => playlist.DeletedAt));
@@ -73,7 +73,7 @@ namespace SoundSphere.Test.Unit.Repositories
             _dbContextMock.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()));
         }
 
-        [Fact] public async Task DeleteById_InvalidId_Test() => await _playlistRepository
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenPlaylistIdIsInvalid() => await _playlistRepository
             .Invoking(repository => repository.DeleteByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(PlaylistNotFound, InvalidId));

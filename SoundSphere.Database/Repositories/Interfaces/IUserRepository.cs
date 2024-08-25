@@ -9,6 +9,10 @@ namespace SoundSphere.Database.Repositories.Interfaces
 
         Task<User> GetByIdAsync(Guid id);
 
+        Task<User> GetByEmailAsync(string email);
+
+        Task<User?> GetByInfoAsync(string name, string email, string phone);
+
         Task<User> AddAsync(User user);
 
         Task<User> UpdateByIdAsync(User user, Guid id);

@@ -28,16 +28,16 @@ namespace SoundSphere.Test.Unit.Repositories
             _notificationRepository = new NotificationRepository(_dbContextMock.Object);
         }
 
-        [Fact] public async Task GetAll_Test() => (await _notificationRepository.GetAllAsync(_notificationPayload)).Should().BeEquivalentTo(_notificationsPagination);
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedNotifications() => (await _notificationRepository.GetAllAsync(_notificationPayload)).Should().BeEquivalentTo(_notificationsPagination);
 
-        [Fact] public async Task GetById_ValidId_Test() => (await _notificationRepository.GetByIdAsync(ValidNotificationId)).Should().BeEquivalentTo(_notifications[0]);
+        [Fact] public async Task GetByIdAsync_ShouldReturnNotification_WhenNotificationIdIsValid() => (await _notificationRepository.GetByIdAsync(ValidNotificationId)).Should().BeEquivalentTo(_notifications[0]);
 
-        [Fact] public async Task GetById_InvalidId_Test() => await _notificationRepository
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenNotificationIdIsInvalid() => await _notificationRepository
             .Invoking(repository => repository.GetByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(NotificationNotFound, InvalidId));
 
-        [Fact] public async Task Add_Test()
+        [Fact] public async Task AddAsync_ShouldAddNewNotification_WhenNotificationDtoIsValid()
         {
             Notification result = await _notificationRepository.AddAsync(_newNotification);
             result.Should().BeEquivalentTo(_newNotification, options => options.Excluding(notification => notification.Id).Excluding(notification => notification.CreatedAt).Excluding(notification => notification.UpdatedAt));
@@ -47,7 +47,7 @@ namespace SoundSphere.Test.Unit.Repositories
             _dbContextMock.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()));
         }
 
-        [Fact] public async Task UpdateById_ValidId_Test()
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateNotification_WhenNotificationIdIsValid()
         {
             Mock<CustomEntityEntry<Notification>> entryMock = new();
             entryMock.SetupProperty(mock => mock.State, EntityState.Modified);
@@ -62,12 +62,12 @@ namespace SoundSphere.Test.Unit.Repositories
             _dbContextMock.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()));
         }
 
-        [Fact] public async Task UpdateById_InvalidId_Test() => await _notificationRepository
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenNotificationIdIsInvalid() => await _notificationRepository
             .Invoking(repository => repository.UpdateByIdAsync(_notifications[1], InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(NotificationNotFound, InvalidId));
 
-        [Fact] public async Task DeleteById_ValidId_Test()
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteNotification_WhenNotificationIdIsValid()
         {
             Notification result = await _notificationRepository.DeleteByIdAsync(ValidNotificationId);
             result.Should().BeEquivalentTo(_notifications[0], options => options.Excluding(notification => notification.DeletedAt));
@@ -75,7 +75,7 @@ namespace SoundSphere.Test.Unit.Repositories
             _dbContextMock.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()));
         }
 
-        [Fact] public async Task DeleteById_InvalidId_Test() => await _notificationRepository
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenNotificationIdIsInvalid() => await _notificationRepository
             .Invoking(repository => repository.DeleteByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(NotificationNotFound, InvalidId));

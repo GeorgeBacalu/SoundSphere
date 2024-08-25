@@ -26,16 +26,16 @@ namespace SoundSphere.Test.Integration.Repositories
             await transaction.RollbackAsync();
         }
 
-        [Fact] public async Task GetAll_Test() => await ExecuteAsync(async (notificationRepository, context) => (await notificationRepository.GetAllAsync(_notificationPayload)).Should().BeEquivalentTo(_notificationsPagination));
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedNotifications() => await ExecuteAsync(async (notificationRepository, context) => (await notificationRepository.GetAllAsync(_notificationPayload)).Should().BeEquivalentTo(_notificationsPagination));
 
-        [Fact] public async Task GetById_ValidId_Test() => await ExecuteAsync(async (notificationRepository, context) => (await notificationRepository.GetByIdAsync(ValidNotificationId)).Should().BeEquivalentTo(_notifications[0]));
+        [Fact] public async Task GetByIdAsync_ShouldReturnNotification_WhenNotificationIdIsValid() => await ExecuteAsync(async (notificationRepository, context) => (await notificationRepository.GetByIdAsync(ValidNotificationId)).Should().BeEquivalentTo(_notifications[0]));
 
-        [Fact] public async Task GetById_InvalidId_Test() => await ExecuteAsync(async (notificationRepository, context) => await notificationRepository
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenNotificationIdIsInvalid() => await ExecuteAsync(async (notificationRepository, context) => await notificationRepository
             .Invoking(repository => repository.GetByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(NotificationNotFound, InvalidId)));
 
-        [Fact] public async Task Add_Test() => await ExecuteAsync(async (notificationRepository, context) =>
+        [Fact] public async Task AddAsync_ShouldAddNewNotification_WhenNotificationDtoIsValid() => await ExecuteAsync(async (notificationRepository, context) =>
         {
             notificationRepository.LinkNotificationToSender(_newNotification);
             notificationRepository.LinkNotificationToReceiver(_newNotification);
@@ -46,7 +46,7 @@ namespace SoundSphere.Test.Integration.Repositories
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_ValidId_Test() => await ExecuteAsync(async (notificationRepository, context) =>
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateNotification_WhenNotificationIdIsValid() => await ExecuteAsync(async (notificationRepository, context) =>
         {
             Notification updatedNotification = _notifications[0];
             updatedNotification.Type = _notifications[1].Type;
@@ -57,19 +57,19 @@ namespace SoundSphere.Test.Integration.Repositories
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_InvalidId_Test() => await ExecuteAsync(async (notificationRepository, context) => await notificationRepository
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenNotificationIdIsInvalid() => await ExecuteAsync(async (notificationRepository, context) => await notificationRepository
             .Invoking(repository => repository.UpdateByIdAsync(_notifications[1], InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(NotificationNotFound, InvalidId)));
 
-        [Fact] public async Task DeleteById_ValidId_Test() => await ExecuteAsync(async (notificationRepository, context) =>
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteNotification_WhenNotificationIdIsValid() => await ExecuteAsync(async (notificationRepository, context) =>
         {
             Notification result = await notificationRepository.DeleteByIdAsync(ValidNotificationId);
             result.Should().BeEquivalentTo(_notifications[0], options => options.Excluding(notification => notification.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task DeleteById_InvalidId_Test() => await ExecuteAsync(async (notificationRepository, context) => await notificationRepository
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenNotificationIdIsInvalid() => await ExecuteAsync(async (notificationRepository, context) => await notificationRepository
             .Invoking(repository => repository.DeleteByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(NotificationNotFound, InvalidId)));

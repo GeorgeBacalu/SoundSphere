@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Request.Auth;
 using SoundSphere.Database.Entities;
 
 namespace SoundSphere.Core.Mappings
@@ -13,5 +14,16 @@ namespace SoundSphere.Core.Mappings
         public static UserDto ToDto(this User user, IMapper mapper) => mapper.Map<UserDto>(user);
 
         public static User ToEntity(this UserDto userDto, IMapper mapper) => mapper.Map<User>(userDto);
+
+        public static User ToEntity(this RegisterRequest payload) => new()
+        {
+            Name = payload.Name,
+            Email = payload.Email,
+            Phone = payload.Phone,
+            Address = payload.Address,
+            Birthday = payload.Birthday,
+            ImageUrl = payload.ImageUrl,
+            Role = payload.Role
+        };
     }
 }

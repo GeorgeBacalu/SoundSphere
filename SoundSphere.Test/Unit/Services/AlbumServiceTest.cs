@@ -25,19 +25,19 @@ namespace SoundSphere.Test.Unit.Services
             _albumService = new AlbumService(_albumRepositoryMock.Object, _mapper);
         }
 
-        [Fact] public async Task GetAll_Test()
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedAlbums()
         {
             _albumRepositoryMock.Setup(mock => mock.GetAllAsync(_albumPayload)).ReturnsAsync(_albumsPagination);
             (await _albumService.GetAllAsync(_albumPayload)).Should().BeEquivalentTo(_albumDtosPagination);
         }
 
-        [Fact] public async Task GetById_ValidId_Test()
+        [Fact] public async Task GetByIdAsync_ShouldReturnAlbum_WhenAlbumIdIsValid()
         {
             _albumRepositoryMock.Setup(mock => mock.GetByIdAsync(ValidAlbumId)).ReturnsAsync(_albums[0]);
             (await _albumService.GetByIdAsync(ValidAlbumId)).Should().BeEquivalentTo(_albumDtos[0]);
         }
 
-        [Fact] public async Task GetById_InvalidId_Test()
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenAlbumIdIsInvalid()
         {
             _albumRepositoryMock.Setup(mock => mock.GetByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(AlbumNotFound, InvalidId)));
             await _albumService.Invoking(service => service.GetByIdAsync(InvalidId))
@@ -46,14 +46,14 @@ namespace SoundSphere.Test.Unit.Services
             _albumRepositoryMock.Verify(mock => mock.GetByIdAsync(InvalidId));
         }
 
-        [Fact] public async Task Add_Test()
+        [Fact] public async Task AddAsync_ShouldAddNewAlbum_WhenAlbumDtoIsValid()
         {
             _albumRepositoryMock.Setup(mock => mock.AddAsync(It.IsAny<Album>())).ReturnsAsync(_newAlbum);
             (await _albumService.AddAsync(_newAlbumDto)).Should().BeEquivalentTo(_newAlbumDto, options => options.Excluding(album => album.Id).Excluding(album => album.CreatedAt).Excluding(album => album.UpdatedAt));
             _albumRepositoryMock.Verify(mock => mock.AddAsync(It.IsAny<Album>()));
         }
 
-        [Fact] public async Task UpdateById_ValidId_Test()
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateAlbum_WhenAlbumIdIsValid()
         {
             Album updatedAlbum = _albums[0];
             updatedAlbum.Title = _albums[1].Title;
@@ -66,7 +66,7 @@ namespace SoundSphere.Test.Unit.Services
             _albumRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Album>(), ValidAlbumId));
         }
 
-        [Fact] public async Task UpdateById_InvalidId_Test()
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenAlbumIdIsInvalid()
         {
             _albumRepositoryMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<Album>(), InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(AlbumNotFound, InvalidId)));
             await _albumService.Invoking(service => service.UpdateByIdAsync(_albumDtos[1], InvalidId))
@@ -75,7 +75,7 @@ namespace SoundSphere.Test.Unit.Services
             _albumRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Album>(), InvalidId));
         }
 
-        [Fact] public async Task DeleteById_ValidId_Test()
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteAlbum_WhenAlbumIdIsValid()
         {
             Album deletedAlbum = _albums[0];
             deletedAlbum.DeletedAt = DateTime.UtcNow;
@@ -85,7 +85,7 @@ namespace SoundSphere.Test.Unit.Services
             _albumRepositoryMock.Verify(mock => mock.DeleteByIdAsync(ValidAlbumId));
         }
 
-        [Fact] public async Task DeleteById_InvalidId_Test()
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenAlbumIdIsInvalid()
         {
             _albumRepositoryMock.Setup(mock => mock.DeleteByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(AlbumNotFound, InvalidId)));
             await _albumService.Invoking(service => service.DeleteByIdAsync(InvalidId))

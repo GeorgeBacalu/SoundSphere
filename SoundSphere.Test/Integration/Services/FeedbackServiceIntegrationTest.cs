@@ -31,25 +31,25 @@ namespace SoundSphere.Test.Integration.Services
             await transaction.RollbackAsync();
         }
 
-        [Fact] public async Task GetAll_Test() => await ExecuteAsync(async (feedbackService, context) => (await feedbackService.GetAllAsync(_feedbackPayload)).Should().BeEquivalentTo(_feedbackDtosPagination));
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedFeedbacks() => await ExecuteAsync(async (feedbackService, context) => (await feedbackService.GetAllAsync(_feedbackPayload)).Should().BeEquivalentTo(_feedbackDtosPagination));
 
-        [Fact] public async Task GetById_ValidId_Test() => await ExecuteAsync(async (feedbackService, context) => (await feedbackService.GetByIdAsync(ValidFeedbackId)).Should().BeEquivalentTo(_feedbackDtos[0]));
+        [Fact] public async Task GetByIdAsync_ShouldReturnFeedback_WhenFeedbackIdIsValid() => await ExecuteAsync(async (feedbackService, context) => (await feedbackService.GetByIdAsync(ValidFeedbackId)).Should().BeEquivalentTo(_feedbackDtos[0]));
 
-        [Fact] public async Task GetById_InvalidId_Test() => await ExecuteAsync(async (feedbackService, context) => await feedbackService
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenFeedbackIdIsInvalid() => await ExecuteAsync(async (feedbackService, context) => await feedbackService
             .Invoking(service => service.GetByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(FeedbackNotFound, InvalidId)));
 
-        [Fact] public async Task Add_Test() => await ExecuteAsync(async (feedbackService, context) =>
+        [Fact] public async Task AddAsync_ShouldAddNewFeedback_WhenFeedbackDtoIsValid() => await ExecuteAsync(async (feedbackService, context) =>
         {
             FeedbackDto result = await feedbackService.AddAsync(_newFeedbackDto);
-            context.Feedbacks.Find(result.Id).Should().BeEquivalentTo(_newFeedback, options => options.Excluding(feedback => feedback.Id).Excluding(feedback => feedback.CreatedAt).Excluding(feedback => feedback.UpdatedAt));
+            (await context.Feedbacks.FindAsync(result.Id)).Should().BeEquivalentTo(_newFeedback, options => options.Excluding(feedback => feedback.Id).Excluding(feedback => feedback.CreatedAt).Excluding(feedback => feedback.UpdatedAt));
             result.Id.Should().NotBe(Guid.Empty);
             result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_ValidId_Test() => await ExecuteAsync(async (feedbackService, context) =>
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateFeedback_WhenFeedbackIdIsValid() => await ExecuteAsync(async (feedbackService, context) =>
         {
             Feedback updatedFeedback = _feedbacks[0];
             updatedFeedback.Type = _feedbacks[1].Type;
@@ -60,19 +60,19 @@ namespace SoundSphere.Test.Integration.Services
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_InvalidId_Test() => await ExecuteAsync(async (feedbackService, context) => await feedbackService
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenFeedbackIdIsInvalid() => await ExecuteAsync(async (feedbackService, context) => await feedbackService
             .Invoking(service => service.UpdateByIdAsync(_feedbackDtos[1], InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(FeedbackNotFound, InvalidId)));
 
-        [Fact] public async Task DeleteById_ValidId_Test() => await ExecuteAsync(async (feedbackService, context) =>
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteFeedback_WhenFeedbackIdIsValid() => await ExecuteAsync(async (feedbackService, context) =>
         {
             FeedbackDto result = await feedbackService.DeleteByIdAsync(ValidFeedbackId);
             result.Should().BeEquivalentTo(_feedbackDtos[0], options => options.Excluding(feedback => feedback.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task DeleteById_InvalidId_Test() => await ExecuteAsync(async (feedbackService, context) => await feedbackService
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenFeedbackIdIsInvalid() => await ExecuteAsync(async (feedbackService, context) => await feedbackService
             .Invoking(service => service.DeleteByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(FeedbackNotFound, InvalidId)));

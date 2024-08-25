@@ -25,16 +25,16 @@ namespace SoundSphere.Test.Integration.Repositories
             await transaction.RollbackAsync();
         }
 
-        [Fact] public async Task GetAll_Test() => await ExecuteAsync(async (artistRepository, context) => (await artistRepository.GetAllAsync(_artistPayload)).Should().BeEquivalentTo(_artistsPagination));
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedArtists() => await ExecuteAsync(async (artistRepository, context) => (await artistRepository.GetAllAsync(_artistPayload)).Should().BeEquivalentTo(_artistsPagination));
 
-        [Fact] public async Task GetById_ValidId_Test() => await ExecuteAsync(async (artistRepository, context) => (await artistRepository.GetByIdAsync(ValidArtistId)).Should().BeEquivalentTo(_artists[0], options => options.Excluding(artist => artist.SimilarArtists)));
+        [Fact] public async Task GetByIdAsync_ShouldReturnArtist_WhenArtistIdIsValid() => await ExecuteAsync(async (artistRepository, context) => (await artistRepository.GetByIdAsync(ValidArtistId)).Should().BeEquivalentTo(_artists[0], options => options.Excluding(artist => artist.SimilarArtists)));
 
-        [Fact] public async Task GetById_InvalidId_Test() => await ExecuteAsync(async (artistRepository, context) => await artistRepository
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenArtistIdIsInvalid() => await ExecuteAsync(async (artistRepository, context) => await artistRepository
             .Invoking(repository => repository.GetByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(ArtistNotFound, InvalidId)));
 
-        [Fact] public async Task Add_Test() => await ExecuteAsync(async (artistRepository, context) =>
+        [Fact] public async Task AddAsync_ShouldAddNewArtist_WhenArtistDtoIsValid() => await ExecuteAsync(async (artistRepository, context) =>
         {
             Artist result = await artistRepository.AddAsync(_newArtist);
             context.Artists.Find(result.Id).Should().BeEquivalentTo(_newArtist, options => options.Excluding(artist => artist.Id).Excluding(artist => artist.CreatedAt).Excluding(artist => artist.UpdatedAt));
@@ -43,7 +43,7 @@ namespace SoundSphere.Test.Integration.Repositories
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_ValidId_Test() => await ExecuteAsync(async (artistRepository, context) =>
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateArtist_WhenArtistIdIsValid() => await ExecuteAsync(async (artistRepository, context) =>
         {
             Artist updatedArtist = _artists[0];
             updatedArtist.Name = _artists[1].Name;
@@ -54,19 +54,19 @@ namespace SoundSphere.Test.Integration.Repositories
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_InvalidId_Test() => await ExecuteAsync(async (artistRepository, context) => await artistRepository
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenArtistIdIsInvalid() => await ExecuteAsync(async (artistRepository, context) => await artistRepository
             .Invoking(repository => repository.UpdateByIdAsync(_artists[1], InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(ArtistNotFound, InvalidId)));
 
-        [Fact] public async Task DeleteById_ValidId_Test() => await ExecuteAsync(async (artistRepository, context) =>
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteArtist_WhenArtistIdIsValid() => await ExecuteAsync(async (artistRepository, context) =>
         {
             Artist result = await artistRepository.DeleteByIdAsync(ValidArtistId);
             result.Should().BeEquivalentTo(_artists[0], options => options.Excluding(artist => artist.DeletedAt).Excluding(artist => artist.SimilarArtists));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task DeleteById_InvalidId_Test() => await ExecuteAsync(async (artistRepository, context) => await artistRepository
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenArtistIdIsInvalid() => await ExecuteAsync(async (artistRepository, context) => await artistRepository
             .Invoking(repository => repository.DeleteByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(ArtistNotFound, InvalidId)));

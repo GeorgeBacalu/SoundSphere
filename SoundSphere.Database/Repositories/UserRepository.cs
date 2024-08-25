@@ -25,9 +25,17 @@ namespace SoundSphere.Database.Repositories
             .SingleOrDefaultAsync(user => user.Id == id)
             ?? throw new ResourceNotFoundException(string.Format(UserNotFound, id));
 
+        public async Task<User> GetByEmailAsync(string email) => await _context.Users
+            .Where(user => user.DeletedAt == null)
+            .SingleOrDefaultAsync(user => user.Email == email)
+            ?? throw new ResourceNotFoundException(string.Format(UserEmailNotFound, email));
+
+        public async Task<User?> GetByInfoAsync(string name, string email, string phone) => await _context.Users
+            .Where(user => user.DeletedAt == null)
+            .SingleOrDefaultAsync(user => user.Name == name || user.Email == email || user.Phone == phone);
+
         public async Task<User> AddAsync(User user)
         {
-            user.Password = "password";
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
             return user;

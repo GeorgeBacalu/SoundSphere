@@ -29,19 +29,19 @@ namespace SoundSphere.Test.Unit.Services
             _playlistService = new PlaylistService(_playlistRepositoryMock.Object, _userRepositoryMock.Object, _songRepositoryMock.Object, _mapper);
         }
 
-        [Fact] public async Task GetAll_Test()
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedPlaylists()
         {
             _playlistRepositoryMock.Setup(mock => mock.GetAllAsync(_playlistPayload)).ReturnsAsync(_playlistsPagination);
             (await _playlistService.GetAllAsync(_playlistPayload)).Should().BeEquivalentTo(_playlistDtosPagination);
         }
 
-        [Fact] public async Task GetById_ValidId_Test()
+        [Fact] public async Task GetByIdAsync_ShouldReturnPlaylist_WhenPlaylistIdIsValid()
         {
             _playlistRepositoryMock.Setup(mock => mock.GetByIdAsync(ValidPlaylistId)).ReturnsAsync(_playlists[0]);
             (await _playlistService.GetByIdAsync(ValidPlaylistId)).Should().BeEquivalentTo(_playlistDtos[0]);
         }
 
-        [Fact] public async Task GetById_InvalidId_Test()
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenPlaylistIdIsInvalid()
         {
             _playlistRepositoryMock.Setup(mock => mock.GetByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(PlaylistNotFound, InvalidId)));
             await _playlistService.Invoking(service => service.GetByIdAsync(InvalidId))
@@ -50,7 +50,7 @@ namespace SoundSphere.Test.Unit.Services
             _playlistRepositoryMock.Verify(mock => mock.GetByIdAsync(InvalidId));
         }
 
-        [Fact] public async Task Add_Test()
+        [Fact] public async Task AddAsync_ShouldAddNewPlaylist_WhenPlaylistDtoIsValid()
         {
             _songs.Take(2).ToList().ForEach(song => _songRepositoryMock.Setup(mock => mock.GetByIdAsync(song.Id)).ReturnsAsync(song));
             _userRepositoryMock.Setup(mock => mock.GetByIdAsync(ValidUserId)).ReturnsAsync(_users[0]);
@@ -59,7 +59,7 @@ namespace SoundSphere.Test.Unit.Services
             _playlistRepositoryMock.Verify(mock => mock.AddAsync(It.IsAny<Playlist>()));
         }
 
-        [Fact] public async Task UpdateById_ValidId_Test()
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdatePlaylist_WhenPlaylistIdIsValid()
         {
             Playlist updatedPlaylist = _playlists[0];
             updatedPlaylist.Title = _playlists[1].Title;
@@ -69,7 +69,7 @@ namespace SoundSphere.Test.Unit.Services
             _playlistRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Playlist>(), ValidPlaylistId));
         }
 
-        [Fact] public async Task UpdateById_InvalidId_Test()
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenPlaylistIdIsInvalid()
         {
             _playlistRepositoryMock.Setup(mock => mock.UpdateByIdAsync(It.IsAny<Playlist>(), InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(PlaylistNotFound, InvalidId)));
             await _playlistService.Invoking(service => service.UpdateByIdAsync(_playlistDtos[1], InvalidId))
@@ -78,7 +78,7 @@ namespace SoundSphere.Test.Unit.Services
             _playlistRepositoryMock.Verify(mock => mock.UpdateByIdAsync(It.IsAny<Playlist>(), InvalidId));
         }
 
-        [Fact] public async Task DeleteById_ValidId_Test()
+        [Fact] public async Task DeleteByIdAsync_ShouldDeletePlaylist_WhenPlaylistIdIsValid()
         {
             Playlist deletedPlaylist = _playlists[0];
             deletedPlaylist.DeletedAt = DateTime.UtcNow;
@@ -88,7 +88,7 @@ namespace SoundSphere.Test.Unit.Services
             _playlistRepositoryMock.Verify(mock => mock.DeleteByIdAsync(ValidPlaylistId));
         }
 
-        [Fact] public async Task DeleteById_InvalidId_Test()
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenPlaylistIdIsInvalid()
         {
             _playlistRepositoryMock.Setup(mock => mock.DeleteByIdAsync(InvalidId)).ThrowsAsync(new ResourceNotFoundException(string.Format(PlaylistNotFound, InvalidId)));
             await _playlistService.Invoking(service => service.DeleteByIdAsync(InvalidId))

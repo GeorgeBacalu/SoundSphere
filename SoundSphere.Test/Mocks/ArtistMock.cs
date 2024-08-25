@@ -577,7 +577,7 @@ namespace SoundSphere.Test.Mocks
 
         public static readonly ArtistPaginationRequest _artistPayload = new(SortCriteria: null, SearchCriteria: null, Name: null);
 
-        public static ArtistDto ToDto(Artist artist) => new()
+        private static ArtistDto ToDto(Artist artist) => new()
         {
             Id = artist.Id,
             Name = artist.Name,

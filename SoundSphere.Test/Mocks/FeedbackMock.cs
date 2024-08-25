@@ -838,7 +838,7 @@ namespace SoundSphere.Test.Mocks
 
         public static readonly FeedbackPaginationRequest _feedbackPayload = new(SortCriteria: null, SearchCriteria: null, Type: null, Message: null, UserName: null, DateRange: null);
 
-        public static FeedbackDto ToDto(Feedback feedback) => new()
+        private static FeedbackDto ToDto(Feedback feedback) => new()
         {
             Id = feedback.Id,
             UserId = feedback.User.Id,

@@ -33,16 +33,16 @@ namespace SoundSphere.Test.Integration.Services
             await transaction.RollbackAsync();
         }
 
-        [Fact] public async Task GetAll_Test() => await ExecuteAsync(async (songService, context) => (await songService.GetAllAsync(_songPayload)).Should().BeEquivalentTo(_songDtosPagination));
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedSongs() => await ExecuteAsync(async (songService, context) => (await songService.GetAllAsync(_songPayload)).Should().BeEquivalentTo(_songDtosPagination));
 
-        [Fact] public async Task GetById_ValidId_Test() => await ExecuteAsync(async (songService, context) => (await songService.GetByIdAsync(ValidSongId)).Should().BeEquivalentTo(_songDtos[0]));
+        [Fact] public async Task GetByIdAsync_ShouldReturnSong_WhenSongIdIsValid() => await ExecuteAsync(async (songService, context) => (await songService.GetByIdAsync(ValidSongId)).Should().BeEquivalentTo(_songDtos[0]));
 
-        [Fact] public async Task GetById_InvalidId_Test() => await ExecuteAsync(async (songService, context) => await songService
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenSongIdIsInvalid() => await ExecuteAsync(async (songService, context) => await songService
             .Invoking(service => service.GetByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(SongNotFound, InvalidId)));
 
-        [Fact] public async Task Add_Test() => await ExecuteAsync(async (songService, context) =>
+        [Fact] public async Task AddAsync_ShouldAddNewSong_WhenSongDtoIsValid() => await ExecuteAsync(async (songService, context) =>
         {
             SongDto result = await songService.AddAsync(_newSongDto);
             context.Songs.Find(result.Id).Should().BeEquivalentTo(_newSong, options => options.Excluding(song => song.Id).Excluding(song => song.CreatedAt).Excluding(song => song.UpdatedAt).Excluding(song => song.Artists));
@@ -51,7 +51,7 @@ namespace SoundSphere.Test.Integration.Services
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_ValidId_Test() => await ExecuteAsync(async (songService, context) =>
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateSong_WhenSongIdIsValid() => await ExecuteAsync(async (songService, context) =>
         {
             Song updatedSong = _songs[0];
             updatedSong.Title = _songs[1].Title;
@@ -68,19 +68,19 @@ namespace SoundSphere.Test.Integration.Services
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_InvalidId_Test() => await ExecuteAsync(async (songService, context) => await songService
+        [Fact] public async Task UpdatUpdateByIdAsync_ShouldThrowException_WhenSongIdIsInvalideById_InvalidId_Test() => await ExecuteAsync(async (songService, context) => await songService
             .Invoking(service => service.UpdateByIdAsync(_songDtos[1], InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(SongNotFound, InvalidId)));
 
-        [Fact] public async Task DeleteById_ValidId_Test() => await ExecuteAsync(async (songService, context) =>
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteSong_WhenSongIdIsValid() => await ExecuteAsync(async (songService, context) =>
         {
             SongDto result = await songService.DeleteByIdAsync(ValidSongId);
             result.Should().BeEquivalentTo(_songDtos[0], options => options.Excluding(song => song.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task DeleteById_InvalidId_Test() => await ExecuteAsync(async (songService, context) => await songService
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenSongIdIsInvalid() => await ExecuteAsync(async (songService, context) => await songService
             .Invoking(service => service.DeleteByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(SongNotFound, InvalidId)));

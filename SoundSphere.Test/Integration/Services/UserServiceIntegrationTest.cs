@@ -24,31 +24,21 @@ namespace SoundSphere.Test.Integration.Services
             using var context = _dbFixture.CreateContext();
             var userService = new UserService(new UserRepository(context), _mapper);
             await using var transaction = await context.Database.BeginTransactionAsync();
-            await context.Users.AddRangeAsync(_users);
-            await context.SaveChangesAsync();
+            await _dbFixture.TrackAndAddAsync(context, _users);
             await action(userService, context);
             await transaction.RollbackAsync();
         }
 
-        [Fact] public async Task GetAll_Test() => await ExecuteAsync(async (userService, context) => (await userService.GetAllAsync(_userPayload)).Should().BeEquivalentTo(_userDtosPagination));
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedUsers() => await ExecuteAsync(async (userService, context) => (await userService.GetAllAsync(_userPayload)).Should().BeEquivalentTo(_userDtosPagination));
 
-        [Fact] public async Task GetById_ValidId_Test() => await ExecuteAsync(async (userService, context) => (await userService.GetByIdAsync(ValidUserId)).Should().BeEquivalentTo(_userDtos[0]));
+        [Fact] public async Task GetByIdAsync_ShouldReturnUser_WhenUserIdIsValid() => await ExecuteAsync(async (userService, context) => (await userService.GetByIdAsync(ValidUserId)).Should().BeEquivalentTo(_userDtos[0]));
 
-        [Fact] public async Task GetById_InvalidId_Test() => await ExecuteAsync(async (userService, context) => await userService
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenUserIdIsInvalid() => await ExecuteAsync(async (userService, context) => await userService
             .Invoking(service => service.GetByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(UserNotFound, InvalidId)));
 
-        [Fact] public async Task Add_Test() => await ExecuteAsync(async (userService, context) =>
-        {
-            UserDto result = await userService.AddAsync(_newUserDto);
-            context.Users.Find(result.Id).Should().BeEquivalentTo(_newUser, options => options.Excluding(user => user.Id).Excluding(user => user.CreatedAt).Excluding(user => user.UpdatedAt).Excluding(user => user.Password));
-            result.Id.Should().NotBe(Guid.Empty);
-            result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-            result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-        });
-
-        [Fact] public async Task UpdateById_ValidId_Test() => await ExecuteAsync(async (userService, context) =>
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateUser_WhenUserIdIsValid() => await ExecuteAsync(async (userService, context) =>
         {
             User updatedUser = _users[0];
             updatedUser.Name = _newUser.Name;
@@ -64,21 +54,40 @@ namespace SoundSphere.Test.Integration.Services
             result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task UpdateById_InvalidId_Test() => await ExecuteAsync(async (userService, context) => await userService
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenUserIdIsInvalid() => await ExecuteAsync(async (userService, context) => await userService
             .Invoking(service => service.UpdateByIdAsync(_userDtos[1], InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(UserNotFound, InvalidId)));
 
-        [Fact] public async Task DeleteById_ValidId_Test() => await ExecuteAsync(async (userService, context) =>
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteUser_WhenUserIdIsValid() => await ExecuteAsync(async (userService, context) =>
         {
             UserDto result = await userService.DeleteByIdAsync(ValidUserId);
             result.Should().BeEquivalentTo(_userDtos[0], options => options.Excluding(user => user.DeletedAt));
             result.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         });
 
-        [Fact] public async Task DeleteById_InvalidId_Test() => await ExecuteAsync(async (userService, context) => await userService
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenUserIdIsInvalid() => await ExecuteAsync(async (userService, context) => await userService
             .Invoking(service => service.DeleteByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(UserNotFound, InvalidId)));
+
+        [Fact] public async Task RegisterAsync_ShouldCreateNewUser_WhenUserDoesNotExist() => await ExecuteAsync(async (userService, context) => (await userService.RegisterAsync(_registerRequestNewUser)).Should().BeEquivalentTo(_newUser, options => options.Excluding(user => user.Id).Excluding(user => user.CreatedAt).Excluding(user => user.UpdatedAt).Excluding(user => user.PasswordSalt).Excluding(user => user.PasswordHash).Excluding(user => user.UserArtists).Excluding(user => user.UserSongs)));
+
+        [Fact] public async Task RegisterAsync_ShouldThrowException_WhenUserAlreadyExists() => await ExecuteAsync(async (userService, context) => await userService
+            .Invoking(service => service.RegisterAsync(_registerRequestExistingUser))
+            .Should().ThrowAsync<InvalidRequestException>()
+            .WithMessage(UserAlreadyExists));
+
+        [Fact] public async Task LoginAsync_ShouldReturnToken_WhenExistingUserLogsIn() => await ExecuteAsync(async (userService, context) => (await userService.LoginAsync(_loginRequestExistingUser)).Should().NotBeNull()); // TODO: Find out how to mock AppConfig.JwtSettings
+
+        [Fact] public async Task LoginAsync_ShouldThrowException_WhenNewUserTriesToLogin() => await ExecuteAsync(async (userService, context) => await userService
+            .Invoking(service => service.LoginAsync(_loginRequestNewUser))
+            .Should().ThrowAsync<ResourceNotFoundException>()
+            .WithMessage(string.Format(UserEmailNotFound, _loginRequestNewUser.Email)));
+
+        [Fact] public async Task LoginAsync_ShouldThrowException_WhenPasswordIsInvalid() => await ExecuteAsync(async (userService, context) => await userService
+            .Invoking(service => service.LoginAsync(_loginRequestInvalidPassword))
+            .Should().ThrowAsync<InvalidRequestException>()
+            .WithMessage(InvalidPassword));
     }
 }

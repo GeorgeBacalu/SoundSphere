@@ -1,6 +1,7 @@
 ﻿using SoundSphere.Database.Dtos.Common;
+using SoundSphere.Database.Dtos.Request.Auth;
 using SoundSphere.Database.Dtos.Request.Pagination;
-
+using SoundSphere.Database.Entities;
 namespace SoundSphere.Core.Services.Interfaces
 {
     public interface IUserService
@@ -9,10 +10,14 @@ namespace SoundSphere.Core.Services.Interfaces
 
         Task<UserDto> GetByIdAsync(Guid id);
 
-        Task<UserDto> AddAsync(UserDto userDto);
-
         Task<UserDto> UpdateByIdAsync(UserDto userDto, Guid id);
 
         Task<UserDto> DeleteByIdAsync(Guid id);
+
+        Task<UserDto> RegisterAsync(RegisterRequest payload);
+
+        Task<string> LoginAsync(LoginRequest payload);
+
+        string GenerateToken(User user);
     }
 }

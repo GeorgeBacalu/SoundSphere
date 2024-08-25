@@ -1,17 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SoundSphere.Core.Services.Interfaces;
 using SoundSphere.Database.Dtos.Common;
 using SoundSphere.Database.Dtos.Request.Pagination;
-using System.Net.Mime;
 using static SoundSphere.Database.Constants;
 
 namespace SoundSphere.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
-    [ApiController]
-    [Produces(MediaTypeNames.Application.Json)]
-    [Consumes(MediaTypeNames.Application.Json)]
-    public class PlaylistController : ControllerBase
+    public class PlaylistController : BaseController
     {
         private readonly IPlaylistService _playlistService;
 
@@ -32,6 +30,7 @@ namespace SoundSphere.Api.Controllers
         /// <param name="playlistDto">PlaylistDTO to add</param>
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin, Moderator")]
         [HttpPost] public async Task<IActionResult> AddAsync(PlaylistDto playlistDto)
         {
             PlaylistDto addedPlaylistDto = await _playlistService.AddAsync(playlistDto);
@@ -44,12 +43,14 @@ namespace SoundSphere.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin, Moderator")]
         [HttpPut("{id}")] public async Task<IActionResult> UpdateByIdAsync(PlaylistDto playlistDto, Guid id) => Ok(await _playlistService.UpdateByIdAsync(playlistDto, id));
 
         /// <summary>Soft delete playlist by ID</summary>
         /// <param name="id">Playlist deleting ID</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")] public async Task<IActionResult> DeleteByIdAsync(Guid id) => Ok(await _playlistService.DeleteByIdAsync(id));
     }
 }

@@ -479,7 +479,7 @@ namespace SoundSphere.Test.Mocks
 
         public static readonly PlaylistPaginationRequest _playlistPayload = new(SortCriteria: null, SearchCriteria: null, Title: null, UserName: null, SongTitle: null, DateRange: null);
 
-        public static PlaylistDto ToDto(Playlist playlist) => new()
+        private static PlaylistDto ToDto(Playlist playlist) => new()
         {
             Id = playlist.Id,
             Title = playlist.Title,

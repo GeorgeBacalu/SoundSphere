@@ -28,16 +28,16 @@ namespace SoundSphere.Test.Unit.Repositories
             _artistRepository = new ArtistRepository(_dbContextMock.Object);
         }
 
-        [Fact] public async Task GetAll_Test() => (await _artistRepository.GetAllAsync(_artistPayload)).Should().BeEquivalentTo(_artistsPagination);
+        [Fact] public async Task GetAllAsync_ShouldReturnPaginatedArtists() => (await _artistRepository.GetAllAsync(_artistPayload)).Should().BeEquivalentTo(_artistsPagination);
 
-        [Fact] public async Task GetById_ValidId_Test() => (await _artistRepository.GetByIdAsync(ValidArtistId)).Should().BeEquivalentTo(_artists[0]);
+        [Fact] public async Task GetByIdAsync_ShouldReturnArtist_WhenArtistIdIsValid() => (await _artistRepository.GetByIdAsync(ValidArtistId)).Should().BeEquivalentTo(_artists[0]);
 
-        [Fact] public async Task GetById_InvalidId_Test() => await _artistRepository
+        [Fact] public async Task GetByIdAsync_ShouldThrowException_WhenArtistIdIsInvalid() => await _artistRepository
             .Invoking(repository => repository.GetByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(ArtistNotFound, InvalidId));
 
-        [Fact] public async Task Add_Test()
+        [Fact] public async Task AddAsync_ShouldAddNewArtist_WhenArtistDtoIsValid()
         {
             Artist result = await _artistRepository.AddAsync(_newArtist);
             result.Should().BeEquivalentTo(_newArtist, options => options.Excluding(artist => artist.Id).Excluding(artist => artist.CreatedAt).Excluding(artist => artist.UpdatedAt));
@@ -47,7 +47,7 @@ namespace SoundSphere.Test.Unit.Repositories
             _dbContextMock.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()));
         }
 
-        [Fact] public async Task UpdateById_ValidId_Test()
+        [Fact] public async Task UpdateByIdAsync_ShouldUpdateArtist_WhenArtistIdIsValid()
         {
             Mock<CustomEntityEntry<Artist>> entryMock = new();
             entryMock.SetupProperty(mock => mock.State, EntityState.Modified);
@@ -63,12 +63,12 @@ namespace SoundSphere.Test.Unit.Repositories
             _dbContextMock.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()));
         }
 
-        [Fact] public async Task UpdateById_InvalidId_Test() => await _artistRepository
+        [Fact] public async Task UpdateByIdAsync_ShouldThrowException_WhenArtistIdIsInvalid() => await _artistRepository
             .Invoking(repository => repository.UpdateByIdAsync(_artists[1], InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(ArtistNotFound, InvalidId));
 
-        [Fact] public async Task DeleteById_ValidId_Test()
+        [Fact] public async Task DeleteByIdAsync_ShouldDeleteUser_WhenArtistIdIsValid()
         {
             Artist result = await _artistRepository.DeleteByIdAsync(ValidArtistId);
             result.Should().BeEquivalentTo(_artists[0], options => options.Excluding(artist => artist.DeletedAt));
@@ -76,7 +76,7 @@ namespace SoundSphere.Test.Unit.Repositories
             _dbContextMock.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()));
         }
 
-        [Fact] public async Task DeleteById_InvalidId_Test() => await _artistRepository
+        [Fact] public async Task DeleteByIdAsync_ShouldThrowException_WhenArtistIdIsInvalid() => await _artistRepository
             .Invoking(repository => repository.DeleteByIdAsync(InvalidId))
             .Should().ThrowAsync<ResourceNotFoundException>()
             .WithMessage(string.Format(ArtistNotFound, InvalidId));
